@@ -35,10 +35,6 @@ function defaultWizard() {
     productName: '',
     yieldAmount: '1',
     ingredients: [newIngredient()],
-    packaging: '0',
-    extraCosts: '0',
-    labor: '0',
-    profitMargin: '30',
   };
 }
 
@@ -48,10 +44,6 @@ function defaultDetail() {
     productId: null,
     productName: '',
     yieldAmount: '',
-    packaging: '',
-    extraCosts: '',
-    labor: '',
-    profitMargin: '',
     ingredients: [],
   };
 }
@@ -67,8 +59,9 @@ const state = {
   savedIngredients: [],
   savedProducts: [],
   history: [],
-  costSettings: null,
-  costDraft: { packaging: '0', extraCosts: '0', labor: '0', profitMargin: '30' },
+  expenseCategories: [],
+  profitTiers: [],
+  suppliers: [],
   dataLoading: false,
   statusMessage: '',
 
@@ -82,6 +75,15 @@ function getEditor(key) {
   return key === 'wizard' ? state.wizard : state.detail;
 }
 
+function pricingFor(editor) {
+  return calculatePricing({
+    ingredients: editor.ingredients,
+    expenseCategories: state.expenseCategories,
+    profitTiers: state.profitTiers,
+    yieldAmount: editor.yieldAmount,
+  });
+}
+
 // ---------------- Foco: captura/restauração entre re-renders ----------------
 
 function captureFocus() {
@@ -93,8 +95,10 @@ function captureFocus() {
     selector = `[data-ingredient="${rowId}"][data-ingredient-field="${el.dataset.ingredientField}"]`;
   } else if (el.dataset.field) {
     selector = `[data-editor="${el.dataset.editor}"][data-field="${el.dataset.field}"]`;
-  } else if (el.dataset.costField) {
-    selector = `[data-cost-field="${el.dataset.costField}"]`;
+  } else if (el.dataset.expenseField) {
+    selector = `[data-expense-id="${el.dataset.expenseId}"][data-expense-field="${el.dataset.expenseField}"]`;
+  } else if (el.dataset.tierField) {
+    selector = `[data-tier-id="${el.dataset.tierId}"][data-tier-field="${el.dataset.tierField}"]`;
   } else if (el.name) {
     selector = `[name="${el.name}"]`;
   }
@@ -120,24 +124,20 @@ async function loadUserData() {
   render();
   try {
     const userId = state.session.user.id;
-    const [ingredients, products, history, costSettings] = await Promise.all([
+    const [ingredients, products, history, expenseCategories, profitTiers, suppliers] = await Promise.all([
       db.listIngredients(userId),
       db.listProducts(userId),
       db.listHistory(userId, 30),
-      db.getCostSettings(userId),
+      db.ensureDefaultExpenseCategories(userId),
+      db.ensureDefaultProfitTiers(userId),
+      db.listSuppliers(userId),
     ]);
     state.savedIngredients = ingredients;
     state.savedProducts = products;
     state.history = history;
-    state.costSettings = costSettings;
-    state.costDraft = costSettings
-      ? {
-          packaging: String(costSettings.packaging),
-          extraCosts: String(costSettings.extra_costs),
-          labor: String(costSettings.labor),
-          profitMargin: String(costSettings.profit_margin),
-        }
-      : { packaging: '0', extraCosts: '0', labor: '0', profitMargin: '30' };
+    state.expenseCategories = expenseCategories;
+    state.profitTiers = profitTiers;
+    state.suppliers = suppliers;
   } catch (error) {
     state.statusMessage = `Erro ao carregar dados: ${error.message}`;
   } finally {
@@ -156,10 +156,6 @@ async function ensureDetailLoaded(id) {
       productId: product.id,
       productName: product.name,
       yieldAmount: String(product.yield_amount),
-      packaging: String(product.packaging),
-      extraCosts: String(product.extra_costs),
-      labor: String(product.labor),
-      profitMargin: String(product.profit_margin),
       ingredients: items.length > 0
         ? items.map((item) => newIngredient({
             ingredientId: item.ingredient_id,
@@ -179,17 +175,7 @@ async function ensureDetailLoaded(id) {
 }
 
 function startWizard() {
-  const c = state.costSettings;
-  state.wizard = {
-    step: 1,
-    productName: '',
-    yieldAmount: '1',
-    ingredients: [newIngredient()],
-    packaging: c ? String(c.packaging) : '0',
-    extraCosts: c ? String(c.extra_costs) : '0',
-    labor: c ? String(c.labor) : '0',
-    profitMargin: c ? String(c.profit_margin) : '30',
-  };
+  state.wizard = defaultWizard();
   state.statusMessage = '';
 }
 
@@ -220,7 +206,9 @@ onAuthStateChange((session) => {
     state.savedIngredients = [];
     state.savedProducts = [];
     state.history = [];
-    state.costSettings = null;
+    state.expenseCategories = [];
+    state.profitTiers = [];
+    state.suppliers = [];
   }
   render();
 });
@@ -250,16 +238,7 @@ function fieldFor(editorKey, key, label, value, mode = 'text') {
 function basicFields(editorKey, editor) {
   return `<div class="field-grid">
     ${fieldFor(editorKey, 'productName', 'Nome do produto', editor.productName)}
-    ${fieldFor(editorKey, 'yieldAmount', 'Rendimento (un.)', editor.yieldAmount, 'decimal')}
-  </div>`;
-}
-
-function costFields(editorKey, editor) {
-  return `<div class="field-grid">
-    ${fieldFor(editorKey, 'packaging', 'Embalagens', editor.packaging, 'decimal')}
-    ${fieldFor(editorKey, 'extraCosts', 'Gás, energia e taxas', editor.extraCosts, 'decimal')}
-    ${fieldFor(editorKey, 'labor', 'Mão de obra', editor.labor, 'decimal')}
-    ${fieldFor(editorKey, 'profitMargin', 'Margem de lucro (%)', editor.profitMargin, 'decimal')}
+    ${fieldFor(editorKey, 'yieldAmount', 'Rendimento (Qnt. por forma)', editor.yieldAmount, 'decimal')}
   </div>`;
 }
 
@@ -288,18 +267,35 @@ function ingredientRows(editorKey, ingredients) {
   </div>`;
 }
 
-function summaryPanel(editor) {
-  const pricing = calculatePricing(editor);
+function tiersTable(pricing) {
+  return `<table style="width:100%; border-collapse:collapse;">
+    <thead><tr style="text-align:left; color:#8e6a61; font-size:0.82rem;">
+      <th style="padding:8px;">Nível</th><th style="padding:8px;">Preço un.</th><th style="padding:8px;">Preço/forma</th><th style="padding:8px;">Lucro líq. un.</th><th style="padding:8px;">Lucro líq. total</th>
+    </tr></thead>
+    <tbody>
+      ${pricing.tiers.map((tier) => `
+        <tr style="border-top:1px solid #f0ded6;">
+          <td style="padding:10px 8px; font-weight:800; color:#8f3f37;">${escapeHtml(tier.name)}</td>
+          <td style="padding:10px 8px; font-weight:800;">${formatCurrency(tier.unitPrice)}</td>
+          <td style="padding:10px 8px;">${formatCurrency(tier.totalPrice)}</td>
+          <td style="padding:10px 8px;">${formatCurrency(tier.netProfitUnit)}</td>
+          <td style="padding:10px 8px;">${formatCurrency(tier.netProfitTotal)}</td>
+        </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function pricingResultBlock(editor) {
+  const pricing = pricingFor(editor);
   return `<aside class="panel summary-panel">
-    <p class="eyebrow">Resumo</p><h2>Resultado da precificação</h2>
+    <p class="eyebrow">Resultado</p><h2>Custo e preços sugeridos</h2>
     <dl>
-      <div><dt>Ingredientes</dt><dd>${formatCurrency(pricing.ingredientsCost)}</dd></div>
-      <div><dt>Custos adicionais</dt><dd>${formatCurrency(pricing.fixedCosts)}</dd></div>
-      <div><dt>Custo total</dt><dd>${formatCurrency(pricing.totalCost)}</dd></div>
-      <div><dt>Custo unitário</dt><dd>${formatCurrency(pricing.unitCost)}</dd></div>
-      <div class="highlight"><dt>Preço de venda</dt><dd>${formatCurrency(pricing.suggestedPrice)}</dd></div>
-      <div class="highlight"><dt>Preço por unidade</dt><dd>${formatCurrency(pricing.unitPrice)}</dd></div>
+      <div><dt>Custo dos ingredientes</dt><dd>${formatCurrency(pricing.ingredientsCost)}</dd></div>
+      <div><dt>Despesas alocadas</dt><dd>${formatCurrency(pricing.expensesCost)}</dd></div>
+      <div><dt>Custo total da receita</dt><dd>${formatCurrency(pricing.totalCost)}</dd></div>
+      <div class="highlight"><dt>Custo por unidade</dt><dd>${formatCurrency(pricing.unitCost)}</dd></div>
     </dl>
+    <div style="margin-top:18px; overflow-x:auto;">${tiersTable(pricing)}</div>
   </aside>`;
 }
 
@@ -307,7 +303,7 @@ function productCardGrid(list) {
   return `<div class="card-grid">${list.map((product) => `
     <div class="item-card" data-action="open-produto" data-id="${product.id}">
       <strong>${escapeHtml(product.name)}</strong>
-      <span class="muted">Rendimento: ${product.yield_amount} un. · Margem: ${product.profit_margin}%</span>
+      <span class="muted">Rendimento: ${product.yield_amount} un.</span>
     </div>`).join('')}</div>`;
 }
 
@@ -315,13 +311,14 @@ function productCardGrid(list) {
 
 function renderDashboard() {
   const ultimo = state.history[0];
+  const ultimoMedia = ultimo?.tiers?.find((t) => t.name === 'Média') ?? ultimo?.tiers?.[0];
   return `
     ${banner('Calculadora de precificação para confeitaria', 'Acompanhe seus produtos, ingredientes e o histórico de preços em um só lugar.')}
     ${statusBox()}
     <div class="stat-grid">
       <div class="stat-card"><span>Produtos salvos</span><strong>${state.savedProducts.length}</strong></div>
       <div class="stat-card"><span>Ingredientes cadastrados</span><strong>${state.savedIngredients.length}</strong></div>
-      <div class="stat-card"><span>Último preço calculado</span><strong>${ultimo ? formatCurrency(ultimo.suggested_price) : '—'}</strong></div>
+      <div class="stat-card"><span>Último preço (média)</span><strong>${ultimoMedia ? formatCurrency(ultimoMedia.unitPrice) : '—'}</strong></div>
     </div>
     <div class="panel">
       <div class="section-header"><h2>Produtos recentes</h2><button type="button" class="ghost" data-action="goto" data-route="produtos">Ver todos</button></div>
@@ -350,39 +347,23 @@ function renderProdutoDetalhe(id) {
     </div>
     ${statusBox()}
     <div class="panel">${basicFields('detail', editor)}</div>
-    <div class="panel"><h3>Ingredientes</h3>${ingredientRows('detail', editor.ingredients)}</div>
+    <div class="panel"><h3>Ingredientes e embalagens usados</h3>${ingredientRows('detail', editor.ingredients)}</div>
     <div class="content-grid">
       <div class="panel cost-panel">
-        <h3>Custos adicionais</h3>
-        ${costFields('detail', editor)}
+        <h3>Ações</h3>
         <div class="save-actions">
           <button type="button" data-action="save-detail">Salvar alterações</button>
           <button type="button" class="ghost" data-action="save-history-detail">Salvar cálculo no histórico</button>
           <button type="button" class="danger" data-action="delete-detail" data-id="${id}">Excluir produto</button>
         </div>
       </div>
-      ${summaryPanel(editor)}
+      ${pricingResultBlock(editor)}
     </div>`;
-}
-
-function renderWizardReview(editor) {
-  const pricing = calculatePricing(editor);
-  return `<div class="wizard-review">
-    <h3>${escapeHtml(editor.productName || 'Produto sem nome')}</h3>
-    <p class="muted">Rendimento: ${escapeHtml(editor.yieldAmount || '0')} un. · ${editor.ingredients.length} ingrediente(s)</p>
-    <dl>
-      <div><dt>Custo dos ingredientes</dt><dd>${formatCurrency(pricing.ingredientsCost)}</dd></div>
-      <div><dt>Custos adicionais</dt><dd>${formatCurrency(pricing.fixedCosts)}</dd></div>
-      <div><dt>Custo total</dt><dd>${formatCurrency(pricing.totalCost)}</dd></div>
-      <div><dt>Preço de venda sugerido</dt><dd>${formatCurrency(pricing.suggestedPrice)}</dd></div>
-      <div><dt>Preço por unidade</dt><dd>${formatCurrency(pricing.unitPrice)}</dd></div>
-    </dl>
-  </div>`;
 }
 
 function renderWizard() {
   const editor = state.wizard;
-  const stepLabels = ['Informações', 'Ingredientes', 'Custos e margem', 'Revisão'];
+  const stepLabels = ['Nome', 'Ingredientes', 'Rendimento', 'Revisão'];
   return `
     <div class="section-header">
       <div><p class="eyebrow">Novo produto</p><h2>Vamos montar sua ficha de precificação</h2></div>
@@ -393,9 +374,9 @@ function renderWizard() {
       ${stepLabels.map((label, i) => `<div class="wizard-step ${editor.step === i + 1 ? 'active' : ''}">${i + 1}. ${label}</div>`).join('')}
     </div>
     <div class="panel">
-      ${editor.step === 1 ? basicFields('wizard', editor) : ''}
-      ${editor.step === 2 ? `<h3>Ingredientes</h3>${ingredientRows('wizard', editor.ingredients)}` : ''}
-      ${editor.step === 3 ? costFields('wizard', editor) : ''}
+      ${editor.step === 1 ? `<div class="field-grid">${fieldFor('wizard', 'productName', 'Nome do produto', editor.productName)}</div>` : ''}
+      ${editor.step === 2 ? `<h3>Selecione os ingredientes/embalagens da base e informe a quantidade usada</h3>${ingredientRows('wizard', editor.ingredients)}` : ''}
+      ${editor.step === 3 ? `<div class="field-grid">${fieldFor('wizard', 'yieldAmount', 'Quantas unidades saem dessa receita (Qnt. por forma)', editor.yieldAmount, 'decimal')}</div>` : ''}
       ${editor.step === 4 ? renderWizardReview(editor) : ''}
     </div>
     <div class="wizard-actions">
@@ -406,54 +387,127 @@ function renderWizard() {
     </div>`;
 }
 
+function renderWizardReview(editor) {
+  const pricing = pricingFor(editor);
+  return `<div class="wizard-review">
+    <h3>${escapeHtml(editor.productName || 'Produto sem nome')}</h3>
+    <p class="muted">Rendimento: ${escapeHtml(editor.yieldAmount || '0')} un. · ${editor.ingredients.length} item(ns)</p>
+    <dl>
+      <div><dt>Custo dos ingredientes</dt><dd>${formatCurrency(pricing.ingredientsCost)}</dd></div>
+      <div><dt>Despesas alocadas</dt><dd>${formatCurrency(pricing.expensesCost)}</dd></div>
+      <div><dt>Custo total</dt><dd>${formatCurrency(pricing.totalCost)}</dd></div>
+      <div><dt>Custo por unidade</dt><dd>${formatCurrency(pricing.unitCost)}</dd></div>
+    </dl>
+    <div style="margin-top:16px; overflow-x:auto;">${tiersTable(pricing)}</div>
+  </div>`;
+}
+
 function renderIngredientesPage() {
   const list = state.savedIngredients.length > 0
     ? `<ul class="saved-list">${state.savedIngredients.map((i) => `
         <li>
-          <span>${escapeHtml(i.name)} <small class="muted">(${formatCurrency(i.package_price)} / ${i.package_amount}${escapeHtml(i.unit)})</small></span>
+          <span>${escapeHtml(i.name)} <small class="muted">(${formatCurrency(i.package_price)} / ${i.package_amount}${escapeHtml(i.unit)}${i.category ? ` · ${escapeHtml(i.category)}` : ''}${i.brand ? ` · ${escapeHtml(i.brand)}` : ''})</small></span>
           <span class="saved-list-actions"><button type="button" class="ghost" data-action="delete-saved-ingredient" data-id="${i.id}">Excluir</button></span>
         </li>`).join('')}</ul>`
     : emptyState('Nenhum ingrediente cadastrado ainda.', false);
 
   return `
-    <div class="section-header"><div><p class="eyebrow">Base de ingredientes</p><h2>Ingredientes cadastrados</h2></div></div>
+    <div class="section-header"><div><p class="eyebrow">Base de produtos</p><h2>Ingredientes e embalagens</h2></div></div>
     ${statusBox()}
     <div class="panel">
       ${state.dataLoading ? loadingMsg() : list}
-      <form data-form="new-ingredient" class="new-ingredient-form">
-        <input name="name" placeholder="Nome do ingrediente" required />
-        <input name="packagePrice" inputmode="decimal" placeholder="Preço (ex: 7,50)" required />
-        <input name="packageAmount" inputmode="decimal" placeholder="Qtd. da embalagem" required />
+      <form data-form="new-ingredient" class="new-ingredient-form" style="grid-template-columns: 1.6fr 1fr 1fr 0.8fr 1fr 1fr auto;">
+        <input name="name" placeholder="Nome" required />
+        <input name="packagePrice" inputmode="decimal" placeholder="Preço (R$)" required />
+        <input name="packageAmount" inputmode="decimal" placeholder="Kg/Gramas" required />
         <input name="unit" placeholder="Un. (g, ml, un)" value="g" required />
+        <input name="category" placeholder="Categoria" />
+        <input name="brand" placeholder="Marca" />
         <button type="submit">Adicionar</button>
       </form>
     </div>`;
 }
 
-function renderCustosPage() {
-  const c = state.costDraft;
+function renderDespesasPage() {
+  const total = state.expenseCategories.reduce((sum, e) => sum + toNumberSafe(e.monthly_value) * (toNumberSafe(e.percentage) / 100), 0);
   return `
-    <div class="section-header"><div><p class="eyebrow">Custos padrão</p><h2>Valores usados como ponto de partida</h2></div></div>
-    <p>Esses valores pré-preenchem embalagem, custos extras, mão de obra e margem sempre que você cria um novo produto no assistente.</p>
+    <div class="section-header"><div><p class="eyebrow">Base de despesas</p><h2>Custos fixos mensais</h2></div></div>
+    <p>Cada despesa é alocada por receita usando o percentual informado (ex.: R$250 de energia × 1% = R$2,50 por receita).</p>
     ${statusBox()}
     <div class="panel">
-      <div class="field-grid">
-        <label>Embalagens<input data-cost-field="packaging" inputmode="decimal" value="${escapeHtml(c.packaging)}" /></label>
-        <label>Gás, energia e taxas<input data-cost-field="extraCosts" inputmode="decimal" value="${escapeHtml(c.extraCosts)}" /></label>
-        <label>Mão de obra<input data-cost-field="labor" inputmode="decimal" value="${escapeHtml(c.labor)}" /></label>
-        <label>Margem de lucro padrão (%)<input data-cost-field="profitMargin" inputmode="decimal" value="${escapeHtml(c.profitMargin)}" /></label>
+      <div class="ingredient-grid header-row" aria-hidden="true" style="grid-template-columns: 1.4fr 1fr 1fr 1fr 80px;"><span>Despesa</span><span>Valor mensal (R$)</span><span>% por receita</span><span>Alocado</span><span></span></div>
+      ${state.expenseCategories.map((expense) => {
+        const allocated = toNumberSafe(expense.monthly_value) * (toNumberSafe(expense.percentage) / 100);
+        return `<div class="ingredient-grid" style="grid-template-columns: 1.4fr 1fr 1fr 1fr 80px;" data-expense-id="${expense.id}">
+          <input aria-label="Despesa" data-expense-id="${expense.id}" data-expense-field="name" value="${escapeHtml(expense.name)}" />
+          <input aria-label="Valor mensal" inputmode="decimal" data-expense-id="${expense.id}" data-expense-field="monthly_value" value="${escapeHtml(expense.monthly_value)}" />
+          <input aria-label="Percentual" inputmode="decimal" data-expense-id="${expense.id}" data-expense-field="percentage" value="${escapeHtml(expense.percentage)}" />
+          <span class="muted" style="align-self:center;">${formatCurrency(allocated)}</span>
+          <button type="button" class="ghost" data-action="delete-expense" data-id="${expense.id}">Excluir</button>
+        </div>`;
+      }).join('')}
+      <div class="save-actions">
+        <button type="button" data-action="add-expense">Adicionar despesa</button>
+        <button type="button" data-action="save-expenses">Salvar despesas</button>
       </div>
-      <div class="save-actions"><button type="button" data-action="save-cost-settings">Salvar padrões</button></div>
+      <p class="status-message" style="margin-top:16px;">Total alocado por receita: <strong>${formatCurrency(total)}</strong></p>
+    </div>`;
+}
+
+function renderLucroPage() {
+  return `
+    <div class="section-header"><div><p class="eyebrow">Base de lucro</p><h2>Níveis de margem</h2></div></div>
+    <p>Cada nível multiplica o custo por unidade para sugerir o preço de venda (ex.: custo × 2,5 no nível Mínimo).</p>
+    ${statusBox()}
+    <div class="panel">
+      <div class="ingredient-grid header-row" aria-hidden="true" style="grid-template-columns: 1fr 1fr;"><span>Nível</span><span>Multiplicador</span></div>
+      ${state.profitTiers.map((tier) => `
+        <div class="ingredient-grid" style="grid-template-columns: 1fr 1fr;" data-tier-id="${tier.id}">
+          <input aria-label="Nome do nível" data-tier-id="${tier.id}" data-tier-field="name" value="${escapeHtml(tier.name)}" />
+          <input aria-label="Multiplicador" inputmode="decimal" data-tier-id="${tier.id}" data-tier-field="multiplier" value="${escapeHtml(tier.multiplier)}" />
+        </div>`).join('')}
+      <div class="save-actions"><button type="button" data-action="save-tiers">Salvar níveis de lucro</button></div>
+    </div>`;
+}
+
+function renderFornecedoresPage() {
+  const list = state.suppliers.length > 0
+    ? `<ul class="saved-list">${state.suppliers.map((s) => `
+        <li>
+          <span>${escapeHtml(s.name)} <small class="muted">${escapeHtml(s.phone || '')}${s.contact_name ? ` · ${escapeHtml(s.contact_name)}` : ''}${s.email ? ` · ${escapeHtml(s.email)}` : ''}</small></span>
+          <span class="saved-list-actions"><button type="button" class="ghost" data-action="delete-supplier" data-id="${s.id}">Excluir</button></span>
+        </li>`).join('')}</ul>`
+    : emptyState('Nenhum fornecedor cadastrado ainda.', false);
+
+  return `
+    <div class="section-header"><div><p class="eyebrow">Base de fornecedores</p><h2>Contatos</h2></div></div>
+    ${statusBox()}
+    <div class="panel">
+      ${state.dataLoading ? loadingMsg() : list}
+      <form data-form="new-supplier" class="new-ingredient-form" style="grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 1fr auto;">
+        <input name="name" placeholder="Nome" required />
+        <input name="phone" placeholder="Telefone" />
+        <input name="address" placeholder="Endereço" />
+        <input name="site" placeholder="Site" />
+        <input name="contact_name" placeholder="Contato" />
+        <input name="email" type="email" placeholder="E-mail" />
+        <button type="submit">Adicionar</button>
+      </form>
     </div>`;
 }
 
 function renderHistoricoPage() {
   if (!state.history.length) return `<div class="panel">${emptyState('Nenhum cálculo salvo ainda.', false)}</div>`;
-  return `<div class="panel"><ul class="saved-list">${state.history.map((h) => `
-      <li>
-        <span>${escapeHtml(h.product_name)} <small class="muted">${new Date(h.created_at).toLocaleString('pt-BR')}</small></span>
-        <span>${formatCurrency(h.suggested_price)}</span>
-      </li>`).join('')}</ul></div>`;
+  return `<div class="panel">${state.history.map((h) => `
+      <div style="padding:14px 0; border-bottom:1px solid #f0ded6;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong>${escapeHtml(h.product_name)}</strong>
+          <small class="muted">${new Date(h.created_at).toLocaleString('pt-BR')}</small>
+        </div>
+        <div style="display:flex; gap:18px; flex-wrap:wrap;">
+          ${(h.tiers || []).map((t) => `<span class="muted">${escapeHtml(t.name)}: <strong style="color:#8f3f37;">${formatCurrency(t.unitPrice)}</strong></span>`).join('')}
+        </div>
+      </div>`).join('')}</div>`;
 }
 
 function renderPage() {
@@ -462,7 +516,9 @@ function renderPage() {
     case 'produto': return renderProdutoDetalhe(state.route.param);
     case 'novo-produto': return renderWizard();
     case 'ingredientes': return renderIngredientesPage();
-    case 'custos': return renderCustosPage();
+    case 'despesas': return renderDespesasPage();
+    case 'lucro': return renderLucroPage();
+    case 'fornecedores': return renderFornecedoresPage();
     case 'historico': return renderHistoricoPage();
     default: return renderDashboard();
   }
@@ -484,7 +540,9 @@ function shellHtml() {
           ${navItem('inicio', 'Início')}
           ${navItem('produtos', 'Produtos')}
           ${navItem('ingredientes', 'Ingredientes')}
-          ${navItem('custos', 'Custos')}
+          ${navItem('despesas', 'Despesas')}
+          ${navItem('lucro', 'Lucro')}
+          ${navItem('fornecedores', 'Fornecedores')}
           ${navItem('historico', 'Histórico')}
         </ul>
         <button type="button" class="nav-cta" data-action="start-wizard" style="width:100%">+ Novo produto</button>
@@ -565,7 +623,12 @@ function wizardNext() {
     return;
   }
   if (ed.step === 2 && !ed.ingredients.some((i) => i.name.trim())) {
-    state.statusMessage = 'Adicione pelo menos um ingrediente.';
+    state.statusMessage = 'Selecione pelo menos um ingrediente da base.';
+    render();
+    return;
+  }
+  if (ed.step === 3 && toNumberSafe(ed.yieldAmount) <= 0) {
+    state.statusMessage = 'Informe quantas unidades saem dessa receita.';
     render();
     return;
   }
@@ -582,10 +645,6 @@ async function handleWizardSave() {
       null,
       {
         name: ed.productName || 'Produto sem nome',
-        packaging: toNumberSafe(ed.packaging),
-        extra_costs: toNumberSafe(ed.extraCosts),
-        labor: toNumberSafe(ed.labor),
-        profit_margin: toNumberSafe(ed.profitMargin),
         yield_amount: Math.max(1, Math.floor(toNumberSafe(ed.yieldAmount) || 1)),
       },
       ed.ingredients,
@@ -610,10 +669,6 @@ async function handleSaveDetail() {
       ed.productId,
       {
         name: ed.productName || 'Produto sem nome',
-        packaging: toNumberSafe(ed.packaging),
-        extra_costs: toNumberSafe(ed.extraCosts),
-        labor: toNumberSafe(ed.labor),
-        profit_margin: toNumberSafe(ed.profitMargin),
         yield_amount: Math.max(1, Math.floor(toNumberSafe(ed.yieldAmount) || 1)),
       },
       ed.ingredients,
@@ -640,7 +695,7 @@ async function handleDeleteDetail(id) {
 async function handleSaveHistoryFromDetail() {
   const ed = state.detail;
   try {
-    const pricing = calculatePricing(ed);
+    const pricing = pricingFor(ed);
     await db.saveHistoryEntry(state.session.user.id, {
       productId: ed.productId,
       productName: ed.productName || 'Produto sem nome',
@@ -654,7 +709,7 @@ async function handleSaveHistoryFromDetail() {
   }
 }
 
-// ---------------- Ações: ingredientes / custos padrão ----------------
+// ---------------- Ações: ingredientes / despesas / lucro / fornecedores ----------------
 
 async function handleNewSavedIngredient(form) {
   const formData = new FormData(form);
@@ -663,6 +718,8 @@ async function handleNewSavedIngredient(form) {
     packagePrice: toNumberSafe(formData.get('packagePrice')),
     packageAmount: toNumberSafe(formData.get('packageAmount')),
     unit: formData.get('unit'),
+    category: formData.get('category') || '',
+    brand: formData.get('brand') || '',
   };
   try {
     await db.createIngredient(state.session.user.id, draft);
@@ -700,21 +757,84 @@ function handleUseIngredientInEditor(editorKey) {
   render();
 }
 
-async function handleSaveCostSettings() {
-  const c = state.costDraft;
+async function handleSaveExpenses() {
   try {
-    const saved = await db.saveCostSettings(state.session.user.id, {
-      packaging: toNumberSafe(c.packaging),
-      extra_costs: toNumberSafe(c.extraCosts),
-      labor: toNumberSafe(c.labor),
-      profit_margin: toNumberSafe(c.profitMargin),
-    });
-    state.costSettings = saved;
-    state.statusMessage = 'Custos padrão salvos.';
+    await Promise.all(state.expenseCategories.map((expense) => db.updateExpenseCategory(expense.id, {
+      name: expense.name,
+      monthly_value: toNumberSafe(expense.monthly_value),
+      percentage: toNumberSafe(expense.percentage),
+    })));
+    state.statusMessage = 'Despesas salvas.';
+    await loadUserData();
   } catch (error) {
-    state.statusMessage = `Erro ao salvar: ${error.message}`;
+    state.statusMessage = `Erro ao salvar despesas: ${error.message}`;
+    render();
   }
-  render();
+}
+
+async function handleAddExpense() {
+  try {
+    await db.createExpenseCategory(state.session.user.id, {
+      name: 'Nova despesa', monthly_value: 0, percentage: 1, position: state.expenseCategories.length,
+    });
+    await loadUserData();
+  } catch (error) {
+    state.statusMessage = `Erro: ${error.message}`;
+    render();
+  }
+}
+
+async function handleDeleteExpense(id) {
+  try {
+    await db.deleteExpenseCategory(id);
+    await loadUserData();
+  } catch (error) {
+    state.statusMessage = `Erro: ${error.message}`;
+    render();
+  }
+}
+
+async function handleSaveTiers() {
+  try {
+    await Promise.all(state.profitTiers.map((tier) => db.updateProfitTier(tier.id, {
+      name: tier.name,
+      multiplier: toNumberSafe(tier.multiplier),
+    })));
+    state.statusMessage = 'Níveis de lucro salvos.';
+    await loadUserData();
+  } catch (error) {
+    state.statusMessage = `Erro ao salvar níveis de lucro: ${error.message}`;
+    render();
+  }
+}
+
+async function handleNewSupplier(form) {
+  const formData = new FormData(form);
+  const draft = {
+    name: formData.get('name'),
+    phone: formData.get('phone') || '',
+    address: formData.get('address') || '',
+    site: formData.get('site') || '',
+    contact_name: formData.get('contact_name') || '',
+    email: formData.get('email') || '',
+  };
+  try {
+    await db.createSupplier(state.session.user.id, draft);
+    await loadUserData();
+  } catch (error) {
+    state.statusMessage = `Erro ao cadastrar fornecedor: ${error.message}`;
+    render();
+  }
+}
+
+async function handleDeleteSupplier(id) {
+  try {
+    await db.deleteSupplier(id);
+    await loadUserData();
+  } catch (error) {
+    state.statusMessage = `Erro ao excluir fornecedor: ${error.message}`;
+    render();
+  }
 }
 
 // ---------------- Listeners globais ----------------
@@ -733,8 +853,13 @@ app.addEventListener('input', (event) => {
     render();
     return;
   }
-  if (target.dataset.costField) {
-    state.costDraft[target.dataset.costField] = target.value;
+  if (target.dataset.expenseField) {
+    state.expenseCategories = state.expenseCategories.map((e) => (e.id === target.dataset.expenseId ? { ...e, [target.dataset.expenseField]: target.value } : e));
+    render();
+    return;
+  }
+  if (target.dataset.tierField) {
+    state.profitTiers = state.profitTiers.map((t) => (t.id === target.dataset.tierId ? { ...t, [target.dataset.tierField]: target.value } : t));
     render();
   }
 });
@@ -745,6 +870,10 @@ app.addEventListener('submit', (event) => {
   if (formType === 'auth') handleAuthSubmit(event.target);
   if (formType === 'new-ingredient') {
     handleNewSavedIngredient(event.target);
+    event.target.reset();
+  }
+  if (formType === 'new-supplier') {
+    handleNewSupplier(event.target);
     event.target.reset();
   }
 });
@@ -811,8 +940,20 @@ app.addEventListener('click', (event) => {
     case 'delete-saved-ingredient':
       handleDeleteSavedIngredient(id);
       break;
-    case 'save-cost-settings':
-      handleSaveCostSettings();
+    case 'save-expenses':
+      handleSaveExpenses();
+      break;
+    case 'add-expense':
+      handleAddExpense();
+      break;
+    case 'delete-expense':
+      handleDeleteExpense(id);
+      break;
+    case 'save-tiers':
+      handleSaveTiers();
+      break;
+    case 'delete-supplier':
+      handleDeleteSupplier(id);
       break;
     default:
       break;

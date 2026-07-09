@@ -2,50 +2,32 @@
 -- Rode este arquivo inteiro no SQL Editor do seu projeto Supabase
 -- (Dashboard -> SQL Editor -> New query -> colar -> Run)
 
--- Extensão para gen_random_uuid()
 create extension if not exists "pgcrypto";
 
 -- =========================================================
--- Tabela: profiles
--- Um perfil por usuário autenticado, criado automaticamente no cadastro.
+-- profiles — criado automaticamente no cadastro
 -- =========================================================
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   full_name text,
   created_at timestamptz not null default now()
 );
-
 alter table public.profiles enable row level security;
+create policy "Usuário vê o próprio perfil" on public.profiles for select using (auth.uid() = id);
+create policy "Usuário atualiza o próprio perfil" on public.profiles for update using (auth.uid() = id);
 
-create policy "Usuário vê o próprio perfil"
-  on public.profiles for select
-  using (auth.uid() = id);
-
-create policy "Usuário atualiza o próprio perfil"
-  on public.profiles for update
-  using (auth.uid() = id);
-
--- Cria o perfil automaticamente quando um novo usuário se cadastra
 create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, full_name)
-  values (new.id, new.raw_user_meta_data ->> 'full_name');
+  insert into public.profiles (id, full_name) values (new.id, new.raw_user_meta_data ->> 'full_name');
   return new;
 end;
 $$;
-
 drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
+create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user();
 
 -- =========================================================
--- Tabela: ingredients
--- Cadastro reutilizável de ingredientes do usuário.
+-- ingredients — base de insumos/embalagens (Nome, Kg/Preço, Categoria, Marca)
 -- =========================================================
 create table if not exists public.ingredients (
   id uuid primary key default gen_random_uuid(),
@@ -54,43 +36,78 @@ create table if not exists public.ingredients (
   package_price numeric not null default 0,
   package_amount numeric not null default 0,
   unit text not null default 'g',
+  category text default '',
+  brand text default '',
   created_at timestamptz not null default now()
 );
-
 alter table public.ingredients enable row level security;
-
-create policy "Usuário gerencia os próprios ingredientes"
-  on public.ingredients for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+create policy "Usuário gerencia os próprios ingredientes" on public.ingredients for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- =========================================================
--- Tabela: products
--- Produtos/receitas salvos pelo usuário.
+-- expense_categories — despesas fixas mensais (Gás, Limpeza, Energia, Água, Internet)
+-- cadastradas uma única vez por usuário, com % alocado por receita
+-- =========================================================
+create table if not exists public.expense_categories (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  name text not null,
+  monthly_value numeric not null default 0,
+  percentage numeric not null default 1,
+  position integer not null default 0
+);
+alter table public.expense_categories enable row level security;
+create policy "Usuário gerencia as próprias despesas" on public.expense_categories for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- =========================================================
+-- profit_tiers — níveis de lucro (Mínimo, Média, Máximo), multiplicador sobre o custo
+-- =========================================================
+create table if not exists public.profit_tiers (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  name text not null,
+  multiplier numeric not null default 1,
+  position integer not null default 0
+);
+alter table public.profit_tiers enable row level security;
+create policy "Usuário gerencia os próprios níveis de lucro" on public.profit_tiers for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- =========================================================
+-- suppliers — fornecedores
+-- =========================================================
+create table if not exists public.suppliers (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  name text not null,
+  phone text default '',
+  address text default '',
+  site text default '',
+  contact_name text default '',
+  email text default ''
+);
+alter table public.suppliers enable row level security;
+create policy "Usuário gerencia os próprios fornecedores" on public.suppliers for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- =========================================================
+-- products — receitas (nome + rendimento; custos vêm de ingredientes + despesas globais)
 -- =========================================================
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   name text not null,
-  packaging numeric not null default 0,
-  extra_costs numeric not null default 0,
-  labor numeric not null default 0,
-  profit_margin numeric not null default 30,
   yield_amount integer not null default 1,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 alter table public.products enable row level security;
-
-create policy "Usuário gerencia os próprios produtos"
-  on public.products for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+create policy "Usuário gerencia os próprios produtos" on public.products for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- =========================================================
--- Tabela: product_ingredients
--- Ingredientes usados em cada produto (com quantidade usada naquela receita).
+-- product_ingredients — itens usados em cada receita
 -- =========================================================
 create table if not exists public.product_ingredients (
   id uuid primary key default gen_random_uuid(),
@@ -104,17 +121,12 @@ create table if not exists public.product_ingredients (
   unit text not null default 'g',
   position integer not null default 0
 );
-
 alter table public.product_ingredients enable row level security;
-
-create policy "Usuário gerencia os próprios itens de produto"
-  on public.product_ingredients for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+create policy "Usuário gerencia os próprios itens de produto" on public.product_ingredients for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- =========================================================
--- Tabela: pricing_history
--- Snapshot de cada cálculo de precificação feito.
+-- pricing_history — snapshot de cada cálculo (com os 3 cenários de lucro)
 -- =========================================================
 create table if not exists public.pricing_history (
   id uuid primary key default gen_random_uuid(),
@@ -122,45 +134,22 @@ create table if not exists public.pricing_history (
   product_id uuid references public.products (id) on delete set null,
   product_name text not null,
   ingredients_cost numeric not null,
-  fixed_costs numeric not null,
+  expenses_cost numeric not null default 0,
   total_cost numeric not null,
-  suggested_price numeric not null,
   unit_cost numeric not null,
-  unit_price numeric not null,
   yield_amount integer not null,
+  tiers jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now()
 );
-
 alter table public.pricing_history enable row level security;
+create policy "Usuário gerencia o próprio histórico" on public.pricing_history for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
-create policy "Usuário gerencia o próprio histórico"
-  on public.pricing_history for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
--- Índices úteis
+-- Índices
 create index if not exists ingredients_user_id_idx on public.ingredients (user_id);
 create index if not exists products_user_id_idx on public.products (user_id);
 create index if not exists product_ingredients_product_id_idx on public.product_ingredients (product_id);
 create index if not exists pricing_history_user_id_idx on public.pricing_history (user_id, created_at desc);
-
--- =========================================================
--- Tabela: cost_settings
--- Custos padrão do usuário (embalagem, mão de obra, margem), usados
--- para pré-preencher o assistente de novo produto.
--- =========================================================
-create table if not exists public.cost_settings (
-  user_id uuid primary key references auth.users (id) on delete cascade,
-  packaging numeric not null default 0,
-  extra_costs numeric not null default 0,
-  labor numeric not null default 0,
-  profit_margin numeric not null default 30,
-  updated_at timestamptz not null default now()
-);
-
-alter table public.cost_settings enable row level security;
-
-create policy "Usuário gerencia os próprios custos padrão"
-  on public.cost_settings for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+create index if not exists expense_categories_user_id_idx on public.expense_categories (user_id, position);
+create index if not exists profit_tiers_user_id_idx on public.profit_tiers (user_id, position);
+create index if not exists suppliers_user_id_idx on public.suppliers (user_id);

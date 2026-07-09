@@ -15,21 +15,33 @@ describe('pricing helpers', () => {
     assert.equal(calculateIngredientCost({ packagePrice: '10', packageAmount: '1000', usedAmount: '250' }), 2.5);
   });
 
-  it('calculates total, suggested and unit prices', () => {
+  it('calculates total cost, unit cost and profit tiers using real-world figures', () => {
+    // Exemplo real: Açúcar Refinado Caravelas R$3,10/1000g, 120g usados; despesas
+    // mensais Gás/Limpeza/Energia/Água a 1%; níveis de lucro 250/280/350%; 14 unidades por forma.
     const result = calculatePricing({
-      ingredients: [{ packagePrice: '10', packageAmount: '1000', usedAmount: '500' }],
-      packaging: '2',
-      extraCosts: '3',
-      labor: '10',
-      profitMargin: '50',
-      yieldAmount: '4',
+      ingredients: [{ packagePrice: '3,10', packageAmount: '1000', usedAmount: '120' }],
+      expenseCategories: [
+        { name: 'Gás', monthly_value: 0, percentage: 1 },
+        { name: 'Limpeza', monthly_value: 10, percentage: 1 },
+        { name: 'Energia', monthly_value: 250, percentage: 1 },
+        { name: 'Água', monthly_value: 75, percentage: 1 },
+      ],
+      profitTiers: [
+        { id: 'min', name: 'Mínimo', multiplier: 2.5 },
+        { id: 'med', name: 'Média', multiplier: 2.8 },
+        { id: 'max', name: 'Máximo', multiplier: 3.5 },
+      ],
+      yieldAmount: '14',
     });
 
-    assert.equal(result.ingredientsCost, 5);
-    assert.equal(result.fixedCosts, 15);
-    assert.equal(result.totalCost, 20);
-    assert.equal(result.suggestedPrice, 30);
-    assert.equal(result.unitCost, 5);
-    assert.equal(result.unitPrice, 7.5);
+    assert.equal(result.ingredientsCost.toFixed(2), '0.37');
+    assert.equal(result.expensesCost.toFixed(2), '3.35');
+    assert.equal(result.totalCost.toFixed(2), '3.72');
+    assert.ok(Math.abs(result.unitCost - 0.2657) < 0.001);
+
+    const minimo = result.tiers.find((t) => t.id === 'min');
+    assert.equal(minimo.unitPrice, 1); // arredondado para cima até o real fechado
+    assert.equal(minimo.totalPrice, 14);
+    assert.ok(minimo.netProfitUnit > 0.7 && minimo.netProfitUnit < 0.74);
   });
 });
