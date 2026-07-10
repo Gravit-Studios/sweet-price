@@ -3,13 +3,16 @@ import { supabase, FUNCTIONS_URL } from './supabaseClient.js';
 // ---------- Perfil ----------
 
 export async function getProfile(userId) {
+  // maybeSingle (em vez de single) porque uma conta sem linha em profiles
+  // (ex.: criada antes do gatilho existir) não pode derrubar o carregamento
+  // inteiro dos dados do usuário.
   const { data, error } = await supabase
     .from('profiles')
     .select('full_name, role')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
   if (error) throw error;
-  return data;
+  return data ?? { full_name: null, role: 'user' };
 }
 
 export async function updateProfile(userId, fields) {

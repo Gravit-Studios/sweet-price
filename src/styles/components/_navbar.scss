@@ -54,6 +54,7 @@
   margin: 0;
   padding: 0;
   display: flex;
+  justify-content: center;
   gap: 0;
   flex: 1;
   flex-wrap: nowrap;
@@ -63,6 +64,7 @@
     order: 3;
     width: 100%;
     overflow-x: auto;
+    justify-content: flex-start;
   }
 }
 
