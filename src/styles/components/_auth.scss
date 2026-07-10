@@ -1,36 +1,62 @@
 @use '../abstracts' as *;
 
+// Layout full-bleed (sem card): formulário à esquerda, foto ocupando toda a
+// altura da tela à direita.
+
 .auth-page {
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-}
-
-.auth-shell {
-  width: min(960px, 100%);
-  min-height: 600px;
-  display: flex;
   background: $surface;
-  border-radius: $radius-lg;
-  overflow: hidden;
-  box-shadow: $shadow-lift;
 
   @include respond-down($bp-tablet) {
     flex-direction: column;
-    min-height: 0;
   }
+}
+
+.auth-form-side {
+  flex: 1 1 46%;
+  display: flex;
+  flex-direction: column;
+  padding: 40px clamp(24px, 5vw, 64px);
+
+  @include respond-down($bp-tablet) {
+    flex: none;
+    padding: 28px 24px;
+  }
+}
+
+.auth-form-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: min(420px, 100%);
+  margin: 0 auto;
+
+  form {
+    display: grid;
+    gap: 14px;
+  }
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: $primary-500;
+  font-family: $font-heading;
+  font-weight: $fw-black;
+  font-size: 1.05rem;
 }
 
 .auth-visual {
   position: relative;
-  flex: 1 1 45%;
+  flex: 1 1 54%;
   overflow: hidden;
 
   @include respond-down($bp-tablet) {
     flex: none;
-    min-height: 200px;
+    min-height: 260px;
   }
 }
 
@@ -45,23 +71,7 @@
 .auth-visual-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba($ink-900, 0.55) 0%, rgba($ink-900, 0.05) 32%, rgba($ink-900, 0.25) 60%, rgba($ink-900, 0.85) 100%);
-}
-
-.auth-brand {
-  position: absolute;
-  top: 28px;
-  left: 28px;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #fff;
-  font-family: $font-heading;
-  font-weight: $fw-black;
-  font-size: 1.05rem;
-
-  .brand-mark { background: #fff; }
+  background: linear-gradient(180deg, rgba($ink-900, 0.15) 0%, rgba($ink-900, 0) 30%, rgba($ink-900, 0.2) 62%, rgba($ink-900, 0.82) 100%);
 }
 
 .auth-quote {
@@ -83,23 +93,6 @@
     font-weight: $fw-bold;
     line-height: 1.4;
     margin: 0;
-  }
-}
-
-.auth-form-side {
-  flex: 1 1 55%;
-  padding: 48px clamp(24px, 5vw, 56px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  form {
-    display: grid;
-    gap: 14px;
-  }
-
-  @include respond-down($bp-tablet) {
-    padding: 32px 24px;
   }
 }
 

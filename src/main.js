@@ -854,16 +854,9 @@ function authHtml() {
   const isSignUp = state.authMode === 'signup';
   return `
     <div class="auth-page">
-      <div class="auth-shell">
-        <div class="auth-visual">
-          <img src="/assets/bg-login.webp" alt="" class="auth-visual-photo" />
-          <div class="auth-visual-overlay"></div>
-          <div class="auth-brand"><span class="brand-mark"></span> Delícias da Tai</div>
-          <blockquote class="auth-quote">
-            <p>&ldquo;Preço certo é doce garantido: cada receita com a margem que ela merece.&rdquo;</p>
-          </blockquote>
-        </div>
-        <div class="auth-form-side">
+      <div class="auth-form-side">
+        <div class="auth-brand"><span class="brand-mark"></span> Delícias da Tai</div>
+        <div class="auth-form-inner">
           <p class="eyebrow">${isSignUp ? 'Comece agora' : 'Bem-vinda de volta'}</p>
           <h1 class="auth-title">${isSignUp ? 'Crie sua conta' : 'Entre na sua conta'}</h1>
           <p class="auth-subtitle">Calcule o preço ideal dos seus doces com base no custo real de ingredientes e despesas.</p>
@@ -886,6 +879,13 @@ function authHtml() {
             </button>
           </form>
         </div>
+      </div>
+      <div class="auth-visual">
+        <img src="/assets/bg-login.webp" alt="" class="auth-visual-photo" />
+        <div class="auth-visual-overlay"></div>
+        <blockquote class="auth-quote">
+          <p>&ldquo;Preço certo é doce garantido: cada receita com a margem que ela merece.&rdquo;</p>
+        </blockquote>
       </div>
     </div>`;
 }
