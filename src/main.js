@@ -550,7 +550,7 @@ function ingredientNameCell(editorKey, ingredient) {
 function readOnlyIngredientsTable(editorKey, visible) {
   const addLink = addRowLink('Adicionar ingrediente', 'add-ingredient', editorKey);
   return `
-  <table class="data-table">
+  <table class="data-table data-table-cards-mobile">
     <thead><tr><th>Ingrediente</th><th>Preço da compra</th><th>Qtd. comprada</th><th>Qtd. usada</th><th>Un.</th><th>Preço utilizado</th><th></th></tr></thead>
     <tbody>
       ${visible.map((ingredient) => {
@@ -558,11 +558,11 @@ function readOnlyIngredientsTable(editorKey, visible) {
         return `
         <tr data-ingredient="${ingredient.id}">
           <td>${escapeHtml(ingredient.name)}</td>
-          <td>${formatCurrency(toNumberSafe(ingredient.packagePrice))}</td>
-          <td>${escapeHtml(ingredient.packageAmount)}</td>
-          <td>${escapeHtml(ingredient.usedAmount)}</td>
-          <td>${escapeHtml(ingredient.unit)}</td>
-          <td>${formatCurrency(usedCost)}</td>
+          <td data-label="Preço da compra">${formatCurrency(toNumberSafe(ingredient.packagePrice))}</td>
+          <td data-label="Qtd. comprada">${escapeHtml(ingredient.packageAmount)}</td>
+          <td data-label="Qtd. usada">${escapeHtml(ingredient.usedAmount)}</td>
+          <td data-label="Un.">${escapeHtml(ingredient.unit)}</td>
+          <td data-label="Preço utilizado">${formatCurrency(usedCost)}</td>
           <td class="data-table-actions"><button class="ghost" type="button" data-action="remove-ingredient" data-editor="${editorKey}" data-id="${ingredient.id}">Excluir</button></td>
         </tr>`;
       }).join('')}
