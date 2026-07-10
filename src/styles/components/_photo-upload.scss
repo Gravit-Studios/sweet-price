@@ -1,0 +1,54 @@
+@use '../abstracts' as *;
+
+// Upload de foto de receita, reaproveitado no wizard e no detalhe.
+.photo-upload {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.photo-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: $radius-md;
+  object-fit: cover;
+  border: 1px solid $border;
+}
+
+.photo-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: $radius-md;
+  background: $surface-tint;
+  color: $secondary-500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.photo-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.85rem 1.2rem;
+  border-radius: $radius-pill;
+  background: $surface-tint;
+  color: $primary-500;
+  font-weight: $fw-bold;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 0 10px 24px rgba($primary-500, 0.15);
+  }
+
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+}

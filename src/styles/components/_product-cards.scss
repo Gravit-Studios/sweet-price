@@ -54,6 +54,10 @@
   font-size: 1rem;
 }
 
+.item-avatar-photo {
+  object-fit: cover;
+}
+
 .item-card-link {
   display: inline-flex;
   align-items: center;

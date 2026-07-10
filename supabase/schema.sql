@@ -120,12 +120,28 @@ create table if not exists public.products (
   user_id uuid not null references auth.users (id) on delete cascade,
   name text not null,
   yield_amount integer not null default 1,
+  photo_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 alter table public.products enable row level security;
 create policy "Usuário gerencia os próprios produtos" on public.products for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Bucket público para fotos de receitas/produtos. Cada usuário só pode
+-- gravar/apagar dentro da própria pasta (product-photos/&lt;user_id&gt;/...);
+-- leitura é pública porque a foto do produto não é dado sensível.
+insert into storage.buckets (id, name, public)
+values ('product-photos', 'product-photos', true)
+on conflict (id) do nothing;
+
+create policy "Leitura pública de fotos de produtos" on storage.objects
+  for select using (bucket_id = 'product-photos');
+
+create policy "Usuário gerencia as próprias fotos de produtos" on storage.objects
+  for all
+  using (bucket_id = 'product-photos' and (storage.foldername(name))[1] = auth.uid()::text)
+  with check (bucket_id = 'product-photos' and (storage.foldername(name))[1] = auth.uid()::text);
 
 -- =========================================================
 -- product_ingredients — itens usados em cada receita

@@ -90,3 +90,22 @@
     padding-bottom: 8px;
   }
 }
+
+.wizard-review-with-photo {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+  align-items: start;
+
+  @include respond-down($bp-tablet) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wizard-review-photo img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: $radius-md;
+  border: 1px solid $border;
+}

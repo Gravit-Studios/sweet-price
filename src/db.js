@@ -116,6 +116,21 @@ export async function deleteIngredient(id) {
 
 // ---------- Produtos / receitas ----------
 
+// Sobe a foto para o bucket público "product-photos", numa pasta com o id
+// do usuário (as políticas de storage só deixam gravar dentro da própria
+// pasta), e devolve a URL pública para salvar em products.photo_url.
+export async function uploadProductPhoto(userId, file) {
+  const extension = file.name.split('.').pop() || 'jpg';
+  const path = `${userId}/${crypto.randomUUID()}.${extension}`;
+  const { error } = await supabase.storage.from('product-photos').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from('product-photos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function listProducts(userId) {
   const { data, error } = await supabase
     .from('products')

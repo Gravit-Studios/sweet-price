@@ -42,6 +42,8 @@ function defaultWizard() {
     productName: '',
     yieldAmount: '1',
     ingredients: [newIngredient()],
+    photoFile: null,
+    photoPreviewUrl: '',
     errors: {},
   };
 }
@@ -53,6 +55,9 @@ function defaultDetail() {
     productName: '',
     yieldAmount: '',
     ingredients: [],
+    photoUrl: '',
+    photoFile: null,
+    photoPreviewUrl: '',
     errors: {},
   };
 }
@@ -186,6 +191,9 @@ async function ensureDetailLoaded(id) {
             unit: item.unit,
           }))
         : [newIngredient()],
+      photoUrl: product.photo_url || '',
+      photoFile: null,
+      photoPreviewUrl: '',
       errors: {},
     };
   } catch (error) {
@@ -468,12 +476,31 @@ function productCardGrid(list) {
   return `<div class="card-grid">${list.map((product) => `
     <div class="item-card" data-action="open-produto" data-id="${product.id}">
       <div class="item-card-top">
-        <span class="item-avatar" style="background:${avatarColorFor(product.name)}">${escapeHtml(product.name.trim().charAt(0).toUpperCase() || '?')}</span>
+        ${product.photo_url
+          ? `<img class="item-avatar item-avatar-photo" src="${escapeHtml(product.photo_url)}" alt="" />`
+          : `<span class="item-avatar" style="background:${avatarColorFor(product.name)}">${escapeHtml(product.name.trim().charAt(0).toUpperCase() || '?')}</span>`}
         <strong>${escapeHtml(product.name)}</strong>
       </div>
       <span class="muted">Rendimento: ${product.yield_amount} un.</span>
       <span class="item-card-link">Ver detalhes ${icon('arrow')}</span>
     </div>`).join('')}</div>`;
+}
+
+// Upload de foto de receita: usado tanto no wizard quanto no detalhe. O
+// arquivo só é enviado ao Supabase Storage na hora de salvar; até lá, a
+// prévia é só local (URL.createObjectURL).
+function photoUploadField(editorKey, editor) {
+  const previewSrc = editor.photoPreviewUrl || editor.photoUrl || '';
+  return `
+    <div class="photo-upload">
+      ${previewSrc
+        ? `<img src="${previewSrc}" alt="Prévia da foto da receita" class="photo-preview" />`
+        : `<div class="photo-placeholder">${icon('box')}</div>`}
+      <label class="photo-upload-btn">
+        ${icon('plus')}<span>${previewSrc ? 'Trocar foto' : 'Escolher foto'}</span>
+        <input type="file" accept="image/*" data-photo-input="${editorKey}" hidden />
+      </label>
+    </div>`;
 }
 
 // ---------------- Modal overlay ----------------
@@ -669,6 +696,10 @@ function renderProdutoDetalhe(id) {
       <button type="button" class="ghost" data-action="goto" data-route="produtos">Voltar para receitas</button>
     </div>
     ${statusBox()}
+    <div class="panel">
+      <h3>Foto da receita</h3>
+      ${photoUploadField('detail', editor)}
+    </div>
     <div class="panel">${basicFields('detail', editor)}</div>
     <div class="panel">
       <h3>Ingredientes e embalagens usados</h3>
@@ -689,7 +720,8 @@ function renderProdutoDetalhe(id) {
 
 function renderWizard() {
   const editor = state.wizard;
-  const stepLabels = ['Nome', 'Ingredientes', 'Rendimento', 'Revisão'];
+  const stepLabels = ['Nome', 'Ingredientes', 'Rendimento', 'Foto', 'Revisão'];
+  const lastStep = stepLabels.length;
   return `
     <div class="section-header">
       <div><p class="eyebrow">Nova receita</p><h2>Vamos montar sua ficha de precificação</h2></div>
@@ -713,11 +745,12 @@ function renderWizard() {
         ${editor.errors.ingredients ? `<p class="form-error">${escapeHtml(editor.errors.ingredients)}</p>` : ''}
         ${ingredientRows('wizard', editor.ingredients, editor.errors.invalidIngredientIds || new Set())}` : ''}
       ${editor.step === 3 ? `<div class="field-grid">${fieldFor('wizard', 'yieldAmount', 'Quantas unidades saem dessa receita (Qnt. por forma)', editor.yieldAmount, 'decimal', editor.errors.yieldAmount)}</div>` : ''}
-      ${editor.step === 4 ? renderWizardReview(editor) : ''}
+      ${editor.step === 4 ? `<h3>Adicione uma foto da receita (opcional)</h3>${photoUploadField('wizard', editor)}` : ''}
+      ${editor.step === 5 ? renderWizardReview(editor) : ''}
     </div>
     <div class="wizard-actions">
       <button type="button" class="ghost" data-action="wizard-back" ${editor.step === 1 ? 'disabled' : ''}>Voltar</button>
-      ${editor.step < 4
+      ${editor.step < lastStep
         ? '<button type="button" data-action="wizard-next">Avançar</button>'
         : '<button type="button" data-action="wizard-save">Salvar receita</button>'}
     </div>`;
@@ -725,16 +758,20 @@ function renderWizard() {
 
 function renderWizardReview(editor) {
   const pricing = pricingFor(editor);
-  return `<div class="wizard-review">
-    <h3>${escapeHtml(editor.productName || 'Receita sem nome')}</h3>
-    <p class="muted">Rendimento: ${escapeHtml(editor.yieldAmount || '0')} un. · ${editor.ingredients.length} item(ns)</p>
-    <dl>
-      <div><dt>Custo dos ingredientes</dt><dd>${formatCurrency(pricing.ingredientsCost)}</dd></div>
-      <div><dt>Despesas alocadas</dt><dd>${formatCurrency(pricing.expensesCost)}</dd></div>
-      <div><dt>Custo total</dt><dd>${formatCurrency(pricing.totalCost)}</dd></div>
-      <div><dt>Custo por unidade</dt><dd>${formatCurrency(pricing.unitCost)}</dd></div>
-    </dl>
-    <div style="margin-top:16px; overflow-x:auto;">${tiersTable(pricing)}</div>
+  const photoSrc = editor.photoPreviewUrl || editor.photoUrl || '';
+  return `<div class="wizard-review ${photoSrc ? 'wizard-review-with-photo' : ''}">
+    ${photoSrc ? `<div class="wizard-review-photo"><img src="${photoSrc}" alt="" /></div>` : ''}
+    <div class="wizard-review-info">
+      <h3>${escapeHtml(editor.productName || 'Receita sem nome')}</h3>
+      <p class="muted">Rendimento: ${escapeHtml(editor.yieldAmount || '0')} un. · ${editor.ingredients.length} item(ns)</p>
+      <dl>
+        <div><dt>Custo dos ingredientes</dt><dd>${formatCurrency(pricing.ingredientsCost)}</dd></div>
+        <div><dt>Despesas alocadas</dt><dd>${formatCurrency(pricing.expensesCost)}</dd></div>
+        <div><dt>Custo total</dt><dd>${formatCurrency(pricing.totalCost)}</dd></div>
+        <div><dt>Custo por unidade</dt><dd>${formatCurrency(pricing.unitCost)}</dd></div>
+      </dl>
+      <div style="margin-top:16px; overflow-x:auto;">${tiersTable(pricing)}</div>
+    </div>
   </div>`;
 }
 
@@ -1045,7 +1082,7 @@ function wizardNext() {
     render();
     return;
   }
-  ed.step = Math.min(4, ed.step + 1);
+  ed.step = Math.min(5, ed.step + 1);
   render();
 }
 
@@ -1061,12 +1098,16 @@ async function handleWizardSave() {
     return;
   }
   try {
+    const photoUrl = ed.photoFile
+      ? await db.uploadProductPhoto(state.session.user.id, ed.photoFile)
+      : null;
     const saved = await db.saveProduct(
       state.session.user.id,
       null,
       {
         name: ed.productName || 'Receita sem nome',
         yield_amount: Math.max(1, Math.floor(toNumberSafe(ed.yieldAmount) || 1)),
+        ...(photoUrl ? { photo_url: photoUrl } : {}),
       },
       ed.ingredients.filter((i) => i.name.trim()),
     );
@@ -1093,12 +1134,16 @@ async function handleSaveDetail() {
     return;
   }
   try {
+    const photoUrl = ed.photoFile
+      ? await db.uploadProductPhoto(state.session.user.id, ed.photoFile)
+      : ed.photoUrl || null;
     await db.saveProduct(
       state.session.user.id,
       ed.productId,
       {
         name: ed.productName || 'Receita sem nome',
         yield_amount: Math.max(1, Math.floor(toNumberSafe(ed.yieldAmount) || 1)),
+        photo_url: photoUrl,
       },
       ed.ingredients.filter((i) => i.name.trim()),
     );
@@ -1389,6 +1434,17 @@ async function handleDeleteSupplier(id) {
 }
 
 // ---------------- Listeners globais ----------------
+
+app.addEventListener('change', (event) => {
+  const target = event.target;
+  if (!target.dataset || !target.dataset.photoInput) return;
+  const file = target.files?.[0];
+  if (!file) return;
+  const ed = getEditor(target.dataset.photoInput);
+  ed.photoFile = file;
+  ed.photoPreviewUrl = URL.createObjectURL(file);
+  render();
+});
 
 app.addEventListener('input', (event) => {
   const target = event.target;
