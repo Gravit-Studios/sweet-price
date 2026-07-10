@@ -15,7 +15,7 @@ function newIngredient(overrides = {}) {
     packagePrice: '',
     packageAmount: '',
     usedAmount: '',
-    unit: 'g',
+    unit: '',
     ...overrides,
   };
 }
@@ -814,7 +814,7 @@ function addRecipeIngredientModal(data) {
         <label>Preço da compra<input aria-label="Preço da compra" inputmode="decimal" placeholder="R$ 0,00" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="packagePrice" value="${escapeHtml(draft.packagePrice)}" /></label>
         <label>Qtd. comprada<input aria-label="Quantidade comprada" inputmode="decimal" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="packageAmount" value="${escapeHtml(draft.packageAmount)}" /></label>
         <label>Qtd. usada<input aria-label="Quantidade usada" inputmode="decimal" placeholder="${max ? `Máx. ${max}` : 'Obrigatório'}" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="usedAmount" value="${escapeHtml(draft.usedAmount)}" /></label>
-        <label>Unidade<input aria-label="Unidade" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="unit" value="${escapeHtml(draft.unit)}" /></label>
+        <label>Unidade<input aria-label="Unidade" placeholder="g, ml, un..." data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="unit" value="${escapeHtml(draft.unit)}" /></label>
         <div class="save-actions">
           <button type="button" data-action="confirm-add-recipe-ingredient">Inserir</button>
           <button type="button" class="ghost" data-action="close-modal">Cancelar</button>
