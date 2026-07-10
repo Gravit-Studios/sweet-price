@@ -165,6 +165,13 @@
   tbody tr:last-child td {
     border-bottom: 0;
   }
+
+  // Última coluna (ações) encolhe para o conteúdo em vez de herdar o
+  // espaço sobrando da tabela, o que deixava um vão grande antes do link.
+  th:last-child,
+  td:last-child {
+    width: 1%;
+  }
 }
 
 // Ícone de filtro por coluna (tabelas grandes, ex.: Ingredientes): abre uma
@@ -266,7 +273,7 @@
 .data-table-actions {
   display: flex;
   gap: 6px;
-  justify-content: flex-end;
+  justify-content: center;
 
   button {
     padding: 0.45rem 0.8rem;

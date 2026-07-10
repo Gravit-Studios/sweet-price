@@ -381,6 +381,9 @@ const ICON_PATHS = {
   shield: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/>',
   filter: '<path d="M4 5h16M7 12h10M10 19h4"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  cupcake: '<path d="M5 11h14l-1.4 8.6A2 2 0 0 1 15.6 21H8.4a2 2 0 0 1-2-1.4L5 11Z"/><path d="M8 11c0-2.8 1.2-4.5 4-4.5S16 8.2 16 11"/><circle cx="12" cy="4.8" r="1.3"/>',
+  camera: '<rect x="3" y="7" width="18" height="12.5" rx="2.2"/><path d="M8.5 7l1.3-2.4h4.4L15.5 7"/><circle cx="12" cy="13.2" r="3.4"/>',
+  clipboardList: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M8.5 11h7M8.5 15h7M8.5 8h4"/>',
 };
 
 function icon(name, extraClass = '') {
@@ -809,6 +812,10 @@ function modalOverlay() {
   if (state.successModal) {
     return `<div class="modal-overlay">
       <div class="modal-box modal-success">
+        <div class="success-drops" aria-hidden="true">
+          <span class="drop"></span><span class="drop"></span><span class="drop"></span>
+          <span class="drop"></span><span class="drop"></span>
+        </div>
         <div class="success-check">${icon('check')}</div>
         <p>${escapeHtml(state.successModal)}</p>
       </div>
@@ -911,8 +918,14 @@ function renderProdutoDetalhe(id) {
 
 function renderWizard() {
   const editor = state.wizard;
-  const stepLabels = ['Nome', 'Ingredientes', 'Rendimento', 'Foto', 'Revisão'];
-  const lastStep = stepLabels.length;
+  const steps = [
+    { label: 'Nome', icon: 'pencil' },
+    { label: 'Ingredientes', icon: 'leaf' },
+    { label: 'Rendimento', icon: 'cupcake' },
+    { label: 'Foto', icon: 'camera' },
+    { label: 'Revisão', icon: 'clipboardList' },
+  ];
+  const lastStep = steps.length;
   return `
     <div class="section-header">
       <div><p class="eyebrow">Nova receita</p><h2>Vamos montar sua ficha de precificação</h2></div>
@@ -920,12 +933,12 @@ function renderWizard() {
     </div>
     ${statusBox()}
     <div class="stepper">
-      ${stepLabels.map((label, i) => {
+      ${steps.map((step, i) => {
         const stepNum = i + 1;
         const status = stepNum < editor.step ? 'done' : stepNum === editor.step ? 'active' : 'upcoming';
         return `<div class="stepper-item ${status}">
-          <span class="stepper-dot">${status === 'done' ? icon('check') : stepNum}</span>
-          <span class="stepper-label">${label}</span>
+          <span class="stepper-dot">${icon(status === 'done' ? 'check' : step.icon)}</span>
+          <span class="stepper-label">${step.label}</span>
         </div>`;
       }).join('')}
     </div>
@@ -1307,7 +1320,8 @@ function authHtml() {
           <p>&ldquo;Preço certo é doce garantido: cada receita com a margem que ela merece.&rdquo;</p>
         </blockquote>
       </div>
-    </div>`;
+    </div>
+    ${modalOverlay()}`;
 }
 
 function render() {
@@ -1331,10 +1345,13 @@ async function handleAuthSubmit(form) {
   try {
     if (state.authMode === 'signup') {
       await signUp(email, password, fullName);
-      state.authError = 'Conta criada! Verifique seu e-mail para confirmar o acesso, se necessário.';
-    } else {
-      await signIn(email, password);
+      form.reset();
+      state.authMode = 'signin';
+      state.authLoading = false;
+      showSuccess('Conta criada! Verifique seu e-mail para confirmar o acesso, se necessário.');
+      return;
     }
+    await signIn(email, password);
   } catch (error) {
     state.authError = error.message;
   } finally {
