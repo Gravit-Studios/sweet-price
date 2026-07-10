@@ -88,6 +88,7 @@ const state = {
 
   profile: { fullName: '', role: 'user' },
   profileMenuOpen: false,
+  mobileMenuOpen: false,
   successModal: '',
   activeModal: null,
   openCombobox: null,
@@ -217,6 +218,7 @@ function startWizard() {
 
 function handleRouteChange(route) {
   state.route = route;
+  state.mobileMenuOpen = false;
   if (route.path === 'produto' && route.param && state.detail.productId !== route.param) {
     ensureDetailLoaded(route.param);
     return;
@@ -284,6 +286,7 @@ onAuthStateChange((session) => {
     state.openIngredientFilterColumn = null;
     state.profile = { fullName: '', role: 'user' };
     state.profileMenuOpen = false;
+    state.mobileMenuOpen = false;
   }
   render();
 });
@@ -377,6 +380,7 @@ const ICON_PATHS = {
   key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M13 10l2 2"/>',
   shield: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/>',
   filter: '<path d="M4 5h16M7 12h10M10 19h4"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
 };
 
 function icon(name, extraClass = '') {
@@ -1189,7 +1193,7 @@ function shellHtml() {
           <button type="button" class="brand" data-action="goto" data-route="inicio">
             <span class="brand-mark"></span> Delícias da Tai
           </button>
-          <ul class="nav-list">
+          <ul class="nav-list ${state.mobileMenuOpen ? 'open' : ''}">
             ${navItem('produtos', 'Receitas')}
             ${navItem('ingredientes', 'Ingredientes')}
             ${navItem('despesas', 'Despesas')}
@@ -1208,8 +1212,10 @@ function shellHtml() {
                   <button type="button" class="profile-dropdown-item" data-action="open-change-password">${icon('key')}Trocar senha</button>
                 </div>` : ''}
             </div>
-            <button type="button" class="ghost icon-btn" data-action="logout" title="Sair">${icon('logout')}</button>
+            <span class="navbar-divider" aria-hidden="true"></span>
+            <button type="button" class="text-link" data-action="logout">Sair</button>
           </div>
+          <button type="button" class="navbar-menu-toggle" data-action="toggle-mobile-menu" aria-label="Abrir menu">${icon(state.mobileMenuOpen ? 'close' : 'menu')}</button>
         </div>
       </header>
       <div class="main-area">
@@ -1961,6 +1967,10 @@ app.addEventListener('click', (event) => {
       state.profileMenuOpen = !state.profileMenuOpen;
       render();
       break;
+    case 'toggle-mobile-menu':
+      state.mobileMenuOpen = !state.mobileMenuOpen;
+      render();
+      break;
     case 'open-edit-profile':
       state.profileMenuOpen = false;
       openEditProfileModal();
@@ -2016,6 +2026,10 @@ app.addEventListener('click', (event) => {
   }
   if (state.openIngredientFilterColumn && !event.target.closest('.th-filter')) {
     state.openIngredientFilterColumn = null;
+    render();
+  }
+  if (state.mobileMenuOpen && !event.target.closest('.nav-list') && !event.target.closest('.navbar-menu-toggle')) {
+    state.mobileMenuOpen = false;
     render();
   }
   if (event.target.classList.contains('modal-overlay')) {

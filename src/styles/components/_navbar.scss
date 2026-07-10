@@ -15,9 +15,9 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  position: relative;
 
   @include respond-down($bp-tablet) {
-    flex-wrap: wrap;
     padding: 12px 16px;
   }
 }
@@ -55,53 +55,113 @@
   padding: 0;
   display: flex;
   justify-content: center;
-  gap: 0;
+  gap: 4px;
   flex: 1;
   flex-wrap: nowrap;
   min-width: 0;
 
   @include respond-down($bp-tablet) {
-    order: 3;
-    width: 100%;
-    overflow-x: auto;
-    justify-content: flex-start;
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 2px;
+    background: $surface;
+    border-bottom: 1px solid $border;
+    box-shadow: $shadow-md;
+    padding: 8px 16px 12px;
+
+    &.open {
+      display: flex;
+    }
   }
 }
 
+// Peso mais leve e sublinhado (em vez de fundo preenchido) ao passar o
+// mouse ou no item ativo — visual mais discreto de navegação de sistema.
 .nav-link {
-  padding: 9px 12px;
-  border-radius: $radius-sm;
+  padding: 9px 6px;
   color: $ink-700;
-  font-weight: $fw-bold;
+  font-weight: $fw-medium;
   font-size: 0.88rem;
   text-decoration: none;
   cursor: pointer;
   border: 0;
   background: transparent;
   white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease;
+  position: relative;
+  transition: color 0.15s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 2px;
+    height: 2px;
+    border-radius: 2px;
+    background: $primary-500;
+    transform: scaleX(0);
+    transition: transform 0.15s ease;
+  }
 
   &:hover {
-    background: $surface-tint;
+    color: $ink-900;
+    background: none;
+    box-shadow: none;
+    transform: none;
+
+    &::after {
+      transform: scaleX(1);
+    }
+  }
+
+  &.active {
+    color: $primary-500;
+    background: none;
+    font-weight: $fw-bold;
+
+    &::after {
+      transform: scaleX(1);
+    }
+  }
+
+  @include respond-down($bp-tablet) {
+    padding: 10px 8px;
+  }
+}
+
+.navbar-menu-toggle {
+  display: none;
+  background: none;
+  padding: 6px;
+  color: $ink-700;
+  flex-shrink: 0;
+  margin-left: auto;
+
+  &:hover {
     box-shadow: none;
     transform: none;
   }
 
-  &.active {
-    background: $primary-500;
-    color: #fff;
+  @include respond-down($bp-tablet) {
+    display: inline-flex;
   }
 }
 
 .navbar-user {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   flex-shrink: 0;
+}
 
-  @include respond-down($bp-tablet) {
-    margin-left: auto;
-  }
+.navbar-divider {
+  width: 1px;
+  height: 16px;
+  background: $border;
 }
 
 .navbar-email {
@@ -143,6 +203,23 @@
     width: 14px;
     height: 14px;
     color: $ink-400;
+  }
+}
+
+// Botão de texto discreto, sem fundo (usado no "Sair" do navbar; reutilizável
+// em qualquer lugar que precise de uma ação secundária só com texto).
+.text-link {
+  background: none;
+  padding: 0;
+  color: $ink-400;
+  font-weight: $fw-medium;
+  font-size: 0.85rem;
+
+  &:hover {
+    box-shadow: none;
+    transform: none;
+    color: $ink-900;
+    text-decoration: underline;
   }
 }
 

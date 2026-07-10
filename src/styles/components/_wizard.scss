@@ -56,6 +56,12 @@
   font-size: $fs-xs;
   font-weight: $fw-bold;
   color: $ink-400;
+
+  // Em telas pequenas, só o passo atual mostra o texto (evita 5 labels
+  // quebrando linha e disputando espaço lado a lado).
+  @include respond-down($bp-tablet) {
+    display: none;
+  }
 }
 
 .stepper-item.active .stepper-dot,
@@ -67,6 +73,12 @@
 .stepper-item.active .stepper-label,
 .stepper-item.done .stepper-label {
   color: $ink-900;
+}
+
+.stepper-item.active .stepper-label {
+  @include respond-down($bp-tablet) {
+    display: block;
+  }
 }
 
 .wizard-actions {
