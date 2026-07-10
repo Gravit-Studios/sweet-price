@@ -100,14 +100,38 @@
 
 .auth-subtitle { margin: 0 0 26px; }
 
-.auth-tabs {
+.auth-submit {
   display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 
-  button.active {
-    background: $primary-500;
-    color: #fff;
+  .icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.auth-switch {
+  text-align: center;
+  margin: 20px 0 0;
+  color: $ink-700;
+  font-size: 0.92rem;
+
+  button {
+    background: none;
+    border: 0;
+    padding: 0;
+    margin-left: 4px;
+    color: $secondary-600;
+    font-weight: $fw-bold;
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: none;
+      transform: none;
+      text-decoration: underline;
+    }
   }
 }
 

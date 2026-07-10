@@ -29,12 +29,20 @@ function toNumberSafe(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+// Nome de exibição para contas sem "nome completo" salvo: deriva algo
+// apresentável do e-mail em vez de mostrar o endereço cru.
+function nameFromEmail(email) {
+  const prefix = String(email ?? '').split('@')[0];
+  return prefix.replace(/[._-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function defaultWizard() {
   return {
     step: 1,
     productName: '',
     yieldAmount: '1',
     ingredients: [newIngredient()],
+    errors: {},
   };
 }
 
@@ -45,6 +53,7 @@ function defaultDetail() {
     productName: '',
     yieldAmount: '',
     ingredients: [],
+    errors: {},
   };
 }
 
@@ -69,6 +78,7 @@ const state = {
   profileMenuOpen: false,
   successModal: '',
   activeModal: null,
+  openCombobox: null,
 
   admin: { users: [], loading: false, error: '' },
 
@@ -175,6 +185,7 @@ async function ensureDetailLoaded(id) {
             unit: item.unit,
           }))
         : [newIngredient()],
+      errors: {},
     };
   } catch (error) {
     state.statusMessage = `Erro ao abrir receita: ${error.message}`;
@@ -332,14 +343,16 @@ function emptyState(message, showCta) {
   return `<div class="empty-state"><p>${escapeHtml(message)}</p>${showCta ? '<button type="button" data-action="start-wizard">Criar receita</button>' : ''}</div>`;
 }
 
-function fieldFor(editorKey, key, label, value, mode = 'text') {
-  return `<label>${label}<input data-editor="${editorKey}" data-field="${key}" inputmode="${mode}" value="${escapeHtml(value)}" /></label>`;
+// Padrão de campo do projeto: label acima do input, erro (se houver) abaixo.
+function fieldFor(editorKey, key, label, value, mode = 'text', error = '') {
+  return `<label>${label}<input class="${error ? 'is-invalid' : ''}" data-editor="${editorKey}" data-field="${key}" inputmode="${mode}" value="${escapeHtml(value)}" />${error ? `<p class="form-error">${escapeHtml(error)}</p>` : ''}</label>`;
 }
 
 function basicFields(editorKey, editor) {
+  const errors = editor.errors || {};
   return `<div class="field-grid">
-    ${fieldFor(editorKey, 'productName', 'Nome da receita', editor.productName)}
-    ${fieldFor(editorKey, 'yieldAmount', 'Rendimento (Qnt. por forma)', editor.yieldAmount, 'decimal')}
+    ${fieldFor(editorKey, 'productName', 'Nome da receita', editor.productName, 'text', errors.productName)}
+    ${fieldFor(editorKey, 'yieldAmount', 'Rendimento (Qnt. por forma)', editor.yieldAmount, 'decimal', errors.yieldAmount)}
   </div>`;
 }
 
@@ -350,31 +363,56 @@ function maxUsedAmount(ingredient) {
   return max > 0 ? max : null;
 }
 
-function ingredientRows(editorKey, ingredients) {
+// Combobox de busca: input de texto + lista filtrada da base de ingredientes,
+// clicável (não é só um <input list> de HTML, é o mesmo padrão reutilizado
+// em qualquer lugar que precise buscar um ingrediente salvo).
+function ingredientNameCell(editorKey, ingredient) {
+  const rowId = ingredient.id;
+  const isOpen = state.openCombobox === rowId;
+  const query = ingredient.name.trim().toLowerCase();
+  const options = query
+    ? state.savedIngredients.filter((si) => si.name.toLowerCase().includes(query))
+    : state.savedIngredients;
+  return `
+    <div class="combobox">
+      <input aria-label="Ingrediente" autocomplete="off" placeholder="Buscar na base..." data-editor="${editorKey}" data-ingredient-field="name" value="${escapeHtml(ingredient.name)}" />
+      ${isOpen && options.length ? `
+        <div class="combobox-list">
+          ${options.map((si) => `<button type="button" class="combobox-option" data-action="select-ingredient-option" data-editor="${editorKey}" data-row-id="${rowId}" data-ingredient-id="${si.id}">${escapeHtml(si.name)}</button>`).join('')}
+        </div>` : ''}
+    </div>`;
+}
+
+function ingredientRows(editorKey, ingredients, invalidIds = new Set()) {
   return `
   <div class="ingredient-grid header-row" aria-hidden="true"><span>Ingrediente</span><span>Preço da compra</span><span>Qtd. comprada</span><span>Qtd. usada</span><span>Un.</span><span></span></div>
   ${ingredients.map((ingredient) => {
     const max = maxUsedAmount(ingredient);
+    const usedInvalid = invalidIds.has(ingredient.id);
     return `
     <div class="ingredient-grid" data-ingredient="${ingredient.id}">
-      <input aria-label="Ingrediente" list="saved-ingredients-list" placeholder="Digite ou escolha da base" data-editor="${editorKey}" data-ingredient-field="name" value="${escapeHtml(ingredient.name)}" />
+      ${ingredientNameCell(editorKey, ingredient)}
       <input aria-label="Preço da compra" inputmode="decimal" data-editor="${editorKey}" data-ingredient-field="packagePrice" value="${escapeHtml(ingredient.packagePrice)}" />
       <input aria-label="Quantidade comprada" inputmode="decimal" data-editor="${editorKey}" data-ingredient-field="packageAmount" value="${escapeHtml(ingredient.packageAmount)}" />
-      <input aria-label="Quantidade usada" inputmode="decimal" required placeholder="${max ? `Máx. ${max}` : 'Obrigatório'}" data-editor="${editorKey}" data-ingredient-field="usedAmount" value="${escapeHtml(ingredient.usedAmount)}" />
+      <input aria-label="Quantidade usada" inputmode="decimal" required class="${usedInvalid ? 'is-invalid' : ''}" placeholder="${max ? `Máx. ${max}` : 'Obrigatório'}" data-editor="${editorKey}" data-ingredient-field="usedAmount" value="${escapeHtml(ingredient.usedAmount)}" />
       <input aria-label="Unidade" data-editor="${editorKey}" data-ingredient-field="unit" value="${escapeHtml(ingredient.unit)}" />
       <button class="ghost" type="button" data-action="remove-ingredient" data-editor="${editorKey}" data-id="${ingredient.id}">Remover</button>
     </div>`;
   }).join('')}
-  <div style="margin-top:12px;">
+  <div class="ingredient-rows-actions">
     <button type="button" data-action="add-ingredient" data-editor="${editorKey}">Adicionar ingrediente</button>
-  </div>
-  <datalist id="saved-ingredients-list">${state.savedIngredients.map((si) => `<option value="${escapeHtml(si.name)}"></option>`).join('')}</datalist>`;
+  </div>`;
 }
 
 function validateIngredientAmounts(ingredients) {
   const active = ingredients.filter((i) => i.name.trim());
-  if (active.length === 0) return 'Adicione pelo menos um ingrediente da base.';
-  if (active.some((i) => toNumberSafe(i.usedAmount) <= 0)) return 'Informe a quantidade usada de cada ingrediente selecionado.';
+  if (active.length === 0) {
+    return { message: 'Adicione pelo menos um ingrediente da base.', invalidIds: new Set() };
+  }
+  const invalidIds = new Set(active.filter((i) => toNumberSafe(i.usedAmount) <= 0).map((i) => i.id));
+  if (invalidIds.size > 0) {
+    return { message: 'Informe a quantidade usada de cada ingrediente selecionado.', invalidIds };
+  }
   return null;
 }
 
@@ -584,7 +622,11 @@ function renderProdutoDetalhe(id) {
     </div>
     ${statusBox()}
     <div class="panel">${basicFields('detail', editor)}</div>
-    <div class="panel"><h3>Ingredientes e embalagens usados</h3>${ingredientRows('detail', editor.ingredients)}</div>
+    <div class="panel">
+      <h3>Ingredientes e embalagens usados</h3>
+      ${editor.errors.ingredients ? `<p class="form-error">${escapeHtml(editor.errors.ingredients)}</p>` : ''}
+      ${ingredientRows('detail', editor.ingredients, editor.errors.invalidIngredientIds || new Set())}
+    </div>
     <div class="content-grid">
       <div class="panel cost-panel">
         <h3>Ações</h3>
@@ -611,9 +653,12 @@ function renderWizard() {
       ${stepLabels.map((label, i) => `<div class="wizard-step ${editor.step === i + 1 ? 'active' : ''}">${i + 1}. ${label}</div>`).join('')}
     </div>
     <div class="panel">
-      ${editor.step === 1 ? `<div class="field-grid">${fieldFor('wizard', 'productName', 'Nome da receita', editor.productName)}</div>` : ''}
-      ${editor.step === 2 ? `<h3>Selecione os ingredientes/embalagens da base e informe a quantidade usada</h3>${ingredientRows('wizard', editor.ingredients)}` : ''}
-      ${editor.step === 3 ? `<div class="field-grid">${fieldFor('wizard', 'yieldAmount', 'Quantas unidades saem dessa receita (Qnt. por forma)', editor.yieldAmount, 'decimal')}</div>` : ''}
+      ${editor.step === 1 ? `<div class="field-grid">${fieldFor('wizard', 'productName', 'Nome da receita', editor.productName, 'text', editor.errors.productName)}</div>` : ''}
+      ${editor.step === 2 ? `
+        <h3>Selecione os ingredientes/embalagens da base e informe a quantidade usada</h3>
+        ${editor.errors.ingredients ? `<p class="form-error">${escapeHtml(editor.errors.ingredients)}</p>` : ''}
+        ${ingredientRows('wizard', editor.ingredients, editor.errors.invalidIngredientIds || new Set())}` : ''}
+      ${editor.step === 3 ? `<div class="field-grid">${fieldFor('wizard', 'yieldAmount', 'Quantas unidades saem dessa receita (Qnt. por forma)', editor.yieldAmount, 'decimal', editor.errors.yieldAmount)}</div>` : ''}
       ${editor.step === 4 ? renderWizardReview(editor) : ''}
     </div>
     <div class="wizard-actions">
@@ -805,13 +850,13 @@ function renderPage() {
 
 // ---------------- Shell / autenticação ----------------
 
-function navItem(route, label, iconName) {
+function navItem(route, label) {
   const active = state.route.path === route;
-  return `<li><button type="button" class="nav-link ${active ? 'active' : ''}" data-action="goto" data-route="${route}">${icon(iconName)}<span>${label}</span></button></li>`;
+  return `<li><button type="button" class="nav-link ${active ? 'active' : ''}" data-action="goto" data-route="${route}">${label}</button></li>`;
 }
 
 function shellHtml() {
-  const displayName = state.profile.fullName || state.session.user.email;
+  const displayName = state.profile.fullName || nameFromEmail(state.session.user.email);
   return `
     <div class="shell">
       <header class="navbar">
@@ -820,13 +865,13 @@ function shellHtml() {
             <span class="brand-mark"></span> Delícias da Tai
           </button>
           <ul class="nav-list">
-            ${navItem('produtos', 'Receitas', 'box')}
-            ${navItem('ingredientes', 'Ingredientes', 'leaf')}
-            ${navItem('despesas', 'Despesas', 'wallet')}
-            ${navItem('lucro', 'Lucro', 'trending')}
-            ${navItem('fornecedores', 'Fornecedores', 'truck')}
-            ${navItem('historico', 'Histórico', 'clock')}
-            ${state.profile.role === 'admin' ? navItem('admin', 'Admin', 'shield') : ''}
+            ${navItem('produtos', 'Receitas')}
+            ${navItem('ingredientes', 'Ingredientes')}
+            ${navItem('despesas', 'Despesas')}
+            ${navItem('lucro', 'Lucro')}
+            ${navItem('fornecedores', 'Fornecedores')}
+            ${navItem('historico', 'Histórico')}
+            ${state.profile.role === 'admin' ? navItem('admin', 'Admin') : ''}
           </ul>
           <div class="navbar-user">
             <div class="profile-menu">
@@ -860,10 +905,6 @@ function authHtml() {
           <p class="eyebrow">${isSignUp ? 'Comece agora' : 'Bem-vinda de volta'}</p>
           <h1 class="auth-title">${isSignUp ? 'Crie sua conta' : 'Entre na sua conta'}</h1>
           <p class="auth-subtitle">Calcule o preço ideal dos seus doces com base no custo real de ingredientes e despesas.</p>
-          <div class="auth-tabs">
-            <button type="button" class="${!isSignUp ? 'active' : 'ghost'}" data-action="auth-tab" data-mode="signin">Entrar</button>
-            <button type="button" class="${isSignUp ? 'active' : 'ghost'}" data-action="auth-tab" data-mode="signup">Criar conta</button>
-          </div>
           <form data-form="auth">
             ${isSignUp ? '<label>Nome<input name="fullName" type="text" required /></label>' : ''}
             <label>E-mail<input name="email" type="email" required /></label>
@@ -874,10 +915,14 @@ function authHtml() {
                 <span>Concordo com o tratamento dos meus dados pessoais para uso do app, conforme a LGPD.</span>
               </label>` : ''}
             ${state.authError ? `<p class="auth-error">${escapeHtml(state.authError)}</p>` : ''}
-            <button type="submit" ${state.authLoading ? 'disabled' : ''}>
-              ${state.authLoading ? 'Aguarde...' : isSignUp ? 'Criar conta' : 'Entrar'}
+            <button type="submit" class="auth-submit" ${state.authLoading ? 'disabled' : ''}>
+              <span>${state.authLoading ? 'Aguarde...' : isSignUp ? 'Criar conta' : 'Entrar'}</span>${icon('arrow')}
             </button>
           </form>
+          <p class="auth-switch">
+            ${isSignUp ? 'Já tem conta?' : 'Não tem conta?'}
+            <button type="button" data-action="auth-tab" data-mode="${isSignUp ? 'signin' : 'signup'}">${isSignUp ? 'Entrar' : 'Criar conta'}</button>
+          </p>
         </div>
       </div>
       <div class="auth-visual">
@@ -927,34 +972,38 @@ async function handleAuthSubmit(form) {
 
 function wizardNext() {
   const ed = state.wizard;
+  ed.errors = {};
   if (ed.step === 1 && !ed.productName.trim()) {
-    state.statusMessage = 'Dê um nome à receita antes de continuar.';
+    ed.errors.productName = 'Dê um nome à receita antes de continuar.';
     render();
     return;
   }
   if (ed.step === 2) {
     const error = validateIngredientAmounts(ed.ingredients);
     if (error) {
-      state.statusMessage = error;
+      ed.errors.ingredients = error.message;
+      ed.errors.invalidIngredientIds = error.invalidIds;
       render();
       return;
     }
   }
   if (ed.step === 3 && toNumberSafe(ed.yieldAmount) <= 0) {
-    state.statusMessage = 'Informe quantas unidades saem dessa receita.';
+    ed.errors.yieldAmount = 'Informe quantas unidades saem dessa receita.';
     render();
     return;
   }
-  state.statusMessage = '';
   ed.step = Math.min(4, ed.step + 1);
   render();
 }
 
 async function handleWizardSave() {
   const ed = state.wizard;
+  ed.errors = {};
   const validationError = validateIngredientAmounts(ed.ingredients);
   if (validationError) {
-    state.statusMessage = validationError;
+    ed.errors.ingredients = validationError.message;
+    ed.errors.invalidIngredientIds = validationError.invalidIds;
+    ed.step = 2;
     render();
     return;
   }
@@ -982,9 +1031,11 @@ async function handleWizardSave() {
 
 async function handleSaveDetail() {
   const ed = state.detail;
+  ed.errors = {};
   const validationError = validateIngredientAmounts(ed.ingredients);
   if (validationError) {
-    state.statusMessage = validationError;
+    ed.errors.ingredients = validationError.message;
+    ed.errors.invalidIngredientIds = validationError.invalidIds;
     render();
     return;
   }
@@ -1287,6 +1338,7 @@ app.addEventListener('input', (event) => {
       }
       return updated;
     });
+    if (field === 'name') state.openCombobox = rowId;
     render();
     return;
   }
@@ -1324,6 +1376,17 @@ app.addEventListener('blur', (event) => {
   const max = maxUsedAmount(row);
   if (max && toNumberSafe(row.usedAmount) > max) {
     ed.ingredients = ed.ingredients.map((i) => (i.id === rowId ? { ...i, usedAmount: String(max) } : i));
+    render();
+  }
+}, true);
+
+// Abre o combobox de ingrediente ao focar no campo de nome.
+app.addEventListener('focus', (event) => {
+  const target = event.target;
+  if (!target.dataset || target.dataset.ingredientField !== 'name') return;
+  const rowId = target.closest('[data-ingredient]')?.dataset.ingredient;
+  if (rowId && state.openCombobox !== rowId) {
+    state.openCombobox = rowId;
     render();
   }
 }, true);
@@ -1450,15 +1513,37 @@ app.addEventListener('click', (event) => {
     case 'admin-delete':
       handleAdminAction('delete', id);
       break;
+    case 'select-ingredient-option': {
+      const source = state.savedIngredients.find((si) => si.id === el.dataset.ingredientId);
+      if (!source) break;
+      const ed = getEditor(editorKey);
+      const rowId = el.dataset.rowId;
+      ed.ingredients = ed.ingredients.map((i) => (i.id === rowId ? {
+        ...i,
+        ingredientId: source.id,
+        name: source.name,
+        packagePrice: String(source.package_price),
+        packageAmount: String(source.package_amount),
+        unit: source.unit,
+      } : i));
+      state.openCombobox = null;
+      render();
+      break;
+    }
     default:
       break;
   }
 });
 
-// Fecha o menu de perfil ao clicar fora dele, e fecha o modal ao clicar no fundo.
+// Fecha o menu de perfil e o combobox de ingrediente ao clicar fora deles,
+// e fecha o modal ao clicar no fundo.
 app.addEventListener('click', (event) => {
   if (state.profileMenuOpen && !event.target.closest('.profile-menu')) {
     state.profileMenuOpen = false;
+    render();
+  }
+  if (state.openCombobox && !event.target.closest('.combobox')) {
+    state.openCombobox = null;
     render();
   }
   if (event.target.classList.contains('modal-overlay')) {

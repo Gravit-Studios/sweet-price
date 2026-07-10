@@ -11,10 +11,10 @@
 .navbar-inner {
   width: min(1200px, 100%);
   margin: 0 auto;
-  padding: 14px 32px;
+  padding: 14px 24px;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
 
   @include respond-down($bp-tablet) {
     flex-wrap: wrap;
@@ -54,39 +54,30 @@
   margin: 0;
   padding: 0;
   display: flex;
-  gap: 2px;
+  gap: 0;
   flex: 1;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 
   @include respond-down($bp-tablet) {
     order: 3;
     width: 100%;
     overflow-x: auto;
-    flex-wrap: nowrap;
-    gap: 4px;
   }
 }
 
 .nav-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
+  padding: 9px 12px;
   border-radius: $radius-sm;
   color: $ink-700;
   font-weight: $fw-bold;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   text-decoration: none;
   cursor: pointer;
   border: 0;
   background: transparent;
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
-
-  .icon {
-    color: $ink-400;
-    transition: color 0.15s ease;
-  }
 
   &:hover {
     background: $surface-tint;
@@ -97,10 +88,6 @@
   &.active {
     background: $primary-500;
     color: #fff;
-
-    .icon {
-      color: $tertiary-300;
-    }
   }
 }
 

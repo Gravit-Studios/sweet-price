@@ -5,9 +5,9 @@
 .ingredient-grid {
   display: grid;
   grid-template-columns: minmax(160px, 1.6fr) repeat(3, minmax(100px, 1fr)) 70px 100px;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 10px;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 12px;
 
   @include respond-down($bp-tablet) {
     grid-template-columns: 1fr 1fr;
@@ -19,9 +19,54 @@
   font-size: $fs-xs;
   font-weight: $fw-black;
   padding: 0 8px;
+  margin-top: 18px;
+  margin-bottom: 4px;
 
   @include respond-down($bp-tablet) {
     display: none;
+  }
+}
+
+.ingredient-rows-actions {
+  margin-top: 4px;
+}
+
+.combobox {
+  position: relative;
+}
+
+.combobox-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  box-shadow: $shadow-lift;
+  padding: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 15;
+  display: grid;
+  gap: 2px;
+}
+
+.combobox-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  color: $ink-900;
+  font-weight: $fw-medium;
+  font-size: 0.92rem;
+  padding: 9px 10px;
+  border-radius: $radius-sm;
+
+  &:hover {
+    background: $surface-tint;
+    box-shadow: none;
+    transform: none;
   }
 }
 
