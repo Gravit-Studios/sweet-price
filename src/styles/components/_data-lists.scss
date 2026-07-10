@@ -168,10 +168,48 @@
 
   // Última coluna (ações) encolhe para o conteúdo em vez de herdar o
   // espaço sobrando da tabela, o que deixava um vão grande antes do link.
+  // O min-width evita que o flex de dentro (.data-table-actions) fique mais
+  // largo que a célula e "vaze" pra fora — o que também cortava a linha
+  // divisória da linha ao meio, parecendo quebrada.
   th:last-child,
   td:last-child {
     width: 1%;
+    min-width: 140px;
   }
+}
+
+// Coluna de checkbox (seleção múltipla p/ exclusão em massa): encolhe pro
+// conteúdo, sem herdar o min-width da última coluna (aqui é a primeira).
+.data-table-checkbox {
+  width: 1%;
+  min-width: 0;
+  white-space: nowrap;
+
+  input[type='checkbox'] {
+    width: auto;
+    margin: 0;
+  }
+}
+
+// Barra que aparece acima da tabela quando há linhas selecionadas.
+.bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  border-radius: $radius-sm;
+  background: $surface-tint;
+  color: $primary-500;
+  font-weight: $fw-bold;
+}
+
+.bulk-actions-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 // Ícone de filtro por coluna (tabelas grandes, ex.: Ingredientes): abre uma
@@ -255,14 +293,30 @@
 }
 
 // Variante editável: cada célula carrega um input/combobox em vez de texto.
+// Por padrão os campos ficam "invisíveis" (sem borda/fundo), lendo como uma
+// tabela comum; a borda só aparece ao passar o mouse ou focar, revelando que
+// a célula é editável sem que a tabela toda pareça um formulário.
 .data-table-editable {
   td {
     white-space: normal;
   }
 
-  input {
+  input,
+  select {
     width: 100%;
     min-width: 84px;
+    border-color: transparent;
+    background: transparent;
+
+    &:hover,
+    &:focus {
+      border-color: $secondary-200;
+      background: #fffdfb;
+    }
+
+    &.is-invalid {
+      border-color: $danger-500;
+    }
   }
 
   .combobox input {

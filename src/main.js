@@ -73,6 +73,7 @@ const state = {
 
   savedIngredients: [],
   savedProducts: [],
+  selectedProducts: new Set(),
   expenseCategories: [],
   profitTiers: [],
   suppliers: [],
@@ -312,6 +313,7 @@ onAuthStateChange((session) => {
   if (!session) {
     state.savedIngredients = [];
     state.savedProducts = [];
+    state.selectedProducts = new Set();
     state.expenseCategories = [];
     state.profitTiers = [];
     state.suppliers = [];
@@ -621,15 +623,21 @@ function pricingForProduct(product) {
 }
 
 function productsTable(list) {
+  const allSelected = list.length > 0 && list.every((p) => state.selectedProducts.has(p.id));
   return `<div class="table-scroll"><table class="data-table data-table-clickable">
-    <thead><tr><th>Receita</th><th>Qnt. por forma</th><th>Preço un.</th><th></th></tr></thead>
+    <thead><tr>
+      <th class="data-table-checkbox"><input type="checkbox" aria-label="Selecionar todas" data-action="toggle-select-all-products" ${allSelected ? 'checked' : ''} /></th>
+      <th>Receita</th><th>Qnt. por forma</th><th>Preço un.</th><th></th>
+    </tr></thead>
     <tbody>
       ${list.map((product) => {
         const pricing = pricingForProduct(product);
         const mainTier = pricing.tiers.find((t) => t.name === 'Média') || pricing.tiers[0];
         const priceUn = mainTier ? formatCurrency(mainTier.unitPrice) : formatCurrency(pricing.unitCost);
+        const checked = state.selectedProducts.has(product.id);
         return `
         <tr data-action="open-produto" data-id="${product.id}">
+          <td class="data-table-checkbox"><input type="checkbox" aria-label="Selecionar receita" data-action="toggle-select-product" data-id="${product.id}" ${checked ? 'checked' : ''} /></td>
           <td>
             <div class="table-row-title">
               ${product.photo_url
@@ -815,20 +823,24 @@ function addRecipeIngredientModal(data) {
   const draft = ed.ingredients.find((i) => i.id === data.rowId);
   if (!draft) return '';
   const max = maxUsedAmount(draft);
+  const invalid = data.invalidFields || {};
   return `
     <div class="modal-box">
       <div class="modal-header"><h3>Adicionar ingrediente</h3><button type="button" class="icon-btn ghost" data-action="close-modal">${icon('close')}</button></div>
-      ${data.error ? `<p class="auth-error">${escapeHtml(data.error)}</p>` : ''}
       <div class="modal-form">
         <label>Ingrediente
-          <select data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="name">
+          <select class="${invalid.name ? 'is-invalid' : ''}" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="name">
             <option value="">Selecione um ingrediente</option>
             ${state.savedIngredients.map((si) => `<option value="${escapeHtml(si.name)}" ${draft.name === si.name ? 'selected' : ''}>${escapeHtml(si.name)}</option>`).join('')}
           </select>
+          ${invalid.name ? '<span class="form-error">Selecione um ingrediente.</span>' : ''}
         </label>
         <label>Preço da compra<div class="input-prefix"><span class="prefix">R$</span><input aria-label="Preço da compra" inputmode="decimal" placeholder="0,00" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="packagePrice" value="${escapeHtml(draft.packagePrice)}" /></div></label>
         <label>Qtd. comprada<input aria-label="Quantidade comprada" inputmode="decimal" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="packageAmount" value="${escapeHtml(draft.packageAmount)}" /></label>
-        <label>Qtd. usada<input aria-label="Quantidade usada" inputmode="decimal" placeholder="${max ? `Máx. ${max}` : 'Obrigatório'}" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="usedAmount" value="${escapeHtml(draft.usedAmount)}" /></label>
+        <label>Qtd. usada
+          <input class="${invalid.usedAmount ? 'is-invalid' : ''}" aria-label="Quantidade usada" inputmode="decimal" placeholder="${max ? `Máx. ${max}` : 'Obrigatório'}" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="usedAmount" value="${escapeHtml(draft.usedAmount)}" />
+          ${invalid.usedAmount ? '<span class="form-error">Informe a quantidade usada.</span>' : ''}
+        </label>
         <label>Unidade<input aria-label="Unidade" placeholder="g, ml, un..." data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="unit" value="${escapeHtml(draft.unit)}" /></label>
         <div class="save-actions">
           <button type="button" data-action="confirm-add-recipe-ingredient">Inserir</button>
@@ -952,12 +964,21 @@ function renderDashboard() {
 }
 
 function renderProdutosPage() {
+  const selectedCount = state.selectedProducts.size;
   return `
     <div class="section-header">
       <div><p class="eyebrow">Receitas</p><h2>Suas receitas salvas</h2></div>
       <button type="button" data-action="start-wizard">+ Nova receita</button>
     </div>
     ${statusBox()}
+    ${selectedCount > 0 ? `
+      <div class="bulk-actions-bar">
+        <span>${selectedCount} receita${selectedCount === 1 ? '' : 's'} selecionada${selectedCount === 1 ? '' : 's'}</span>
+        <div class="bulk-actions-buttons">
+          <button type="button" class="ghost" data-action="clear-product-selection">Cancelar seleção</button>
+          <button type="button" class="danger" data-action="confirm-bulk-delete-products">Excluir selecionadas</button>
+        </div>
+      </div>` : ''}
     <div class="panel">
       ${state.dataLoading ? loadingMsg() : (state.savedProducts.length ? productsTable(state.savedProducts) : emptyState('Você ainda não salvou nenhuma receita.', true))}
     </div>
@@ -1624,6 +1645,19 @@ async function handleDeleteDetail(id) {
   }
 }
 
+async function handleBulkDeleteProducts() {
+  const ids = Array.from(state.selectedProducts);
+  try {
+    await Promise.all(ids.map((id) => db.deleteProduct(id)));
+    state.selectedProducts.clear();
+    await loadUserData();
+    showSuccess(`${ids.length} receita${ids.length === 1 ? '' : 's'} excluída${ids.length === 1 ? '' : 's'}.`);
+  } catch (error) {
+    state.statusMessage = `Erro ao excluir: ${error.message}`;
+    render();
+  }
+}
+
 // ---------------- Ações: ingredientes / despesas / lucro / fornecedores ----------------
 
 async function handleNewSavedIngredient(form) {
@@ -1898,6 +1932,15 @@ function openConfirmDeleteProduct(id, name) {
   });
 }
 
+function openConfirmBulkDeleteProducts() {
+  const count = state.selectedProducts.size;
+  openModal('confirm-delete', {
+    kind: 'bulk-products',
+    title: 'Excluir receitas selecionadas',
+    message: `Tem certeza que deseja excluir ${count} receita${count === 1 ? '' : 's'} selecionada${count === 1 ? '' : 's'}? Essa ação não pode ser desfeita.`,
+  });
+}
+
 function openConfirmAdminSuspend(user) {
   openModal('confirm-delete', {
     kind: 'admin-suspend',
@@ -1924,6 +1967,7 @@ async function handleConfirmDelete() {
   closeModal();
   if (modal.kind === 'ingredient') await handleDeleteSavedIngredient(modal.id);
   if (modal.kind === 'product') await handleDeleteDetail(modal.id);
+  if (modal.kind === 'bulk-products') await handleBulkDeleteProducts();
   if (modal.kind === 'admin-suspend') await handleAdminAction('suspend', modal.id);
   if (modal.kind === 'admin-delete') await handleAdminAction('delete', modal.id);
 }
@@ -1945,8 +1989,12 @@ function handleConfirmAddRecipeIngredient() {
     closeModal();
     return;
   }
-  if (!draft.name.trim() || toNumberSafe(draft.usedAmount) <= 0) {
-    state.activeModal.error = 'Selecione o ingrediente e informe a quantidade usada.';
+  const invalidFields = {
+    name: !draft.name.trim(),
+    usedAmount: toNumberSafe(draft.usedAmount) <= 0,
+  };
+  if (invalidFields.name || invalidFields.usedAmount) {
+    state.activeModal.invalidFields = invalidFields;
     render();
     return;
   }
@@ -2047,6 +2095,9 @@ app.addEventListener('input', (event) => {
       return updated;
     });
     if (field === 'name') state.openCombobox = rowId;
+    if (state.activeModal?.invalidFields?.[field] && state.activeModal.rowId === rowId) {
+      state.activeModal.invalidFields[field] = false;
+    }
     render();
     return;
   }
@@ -2134,6 +2185,26 @@ app.addEventListener('click', (event) => {
       break;
     case 'open-produto':
       requestNavigation(() => navigate(`#/produto/${id}`));
+      break;
+    case 'toggle-select-product':
+      if (state.selectedProducts.has(id)) state.selectedProducts.delete(id);
+      else state.selectedProducts.add(id);
+      render();
+      break;
+    case 'toggle-select-all-products': {
+      const allIds = state.savedProducts.map((p) => p.id);
+      const allSelected = allIds.length > 0 && allIds.every((pid) => state.selectedProducts.has(pid));
+      if (allSelected) state.selectedProducts.clear();
+      else allIds.forEach((pid) => state.selectedProducts.add(pid));
+      render();
+      break;
+    }
+    case 'clear-product-selection':
+      state.selectedProducts.clear();
+      render();
+      break;
+    case 'confirm-bulk-delete-products':
+      openConfirmBulkDeleteProducts();
       break;
     case 'start-wizard':
       startWizard();
