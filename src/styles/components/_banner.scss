@@ -10,12 +10,14 @@
   align-items: center;
   box-shadow: $shadow-lift;
 
-  svg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
+}
+
+.banner-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .banner-overlay {

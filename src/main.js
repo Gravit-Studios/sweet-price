@@ -1,7 +1,7 @@
 import { calculatePricing, formatCurrency } from './pricing.js';
 import { signUp, signIn, signOut, getSession, onAuthStateChange, changePassword, updateEmail } from './auth.js';
 import { parseRoute, navigate, onRouteChange } from './router.js';
-import { headerArt } from './headerArt.js';
+import { compressImageToWebp } from './imageCompression.js';
 import * as db from './db.js';
 
 // ---------------- Helpers de estado / formatação ----------------
@@ -41,7 +41,7 @@ function defaultWizard() {
     step: 1,
     productName: '',
     yieldAmount: '1',
-    ingredients: [newIngredient()],
+    ingredients: [],
     photoFile: null,
     photoPreviewUrl: '',
     errors: {},
@@ -306,8 +306,9 @@ function closeModal() {
   // Fechar o modal de "adicionar ingrediente à receita" sem confirmar descarta
   // a linha rascunho que ainda não foi inserida na tabela.
   if (state.activeModal?.type === 'add-recipe-ingredient') {
-    const rowId = state.activeModal.rowId;
-    state.detail.ingredients = state.detail.ingredients.filter((i) => !(i.id === rowId && i.draft));
+    const { editorKey, rowId } = state.activeModal;
+    const ed = getEditor(editorKey);
+    ed.ingredients = ed.ingredients.filter((i) => !(i.id === rowId && i.draft));
   }
   state.activeModal = null;
   state.pendingAction = null;
@@ -385,7 +386,7 @@ function avatarColorFor(name) {
 }
 
 function banner(title, subtitle) {
-  return `<div class="banner">${headerArt}<div class="banner-overlay"></div><div class="banner-content"><p class="eyebrow">Delícias da Tai</p><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div></div>`;
+  return `<div class="banner"><img src="/assets/bg-login.webp" alt="" class="banner-photo" /><div class="banner-overlay"></div><div class="banner-content"><p class="eyebrow">Delícias da Tai</p><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div></div>`;
 }
 
 function statusBox() {
@@ -456,27 +457,6 @@ function ingredientNameCell(editorKey, ingredient) {
     </div>`;
 }
 
-function ingredientRows(editorKey, ingredients, invalidIds = new Set()) {
-  return `
-  <div class="ingredient-grid header-row" aria-hidden="true"><span>Ingrediente</span><span>Preço da compra</span><span>Qtd. comprada</span><span>Qtd. usada</span><span>Un.</span><span></span></div>
-  ${ingredients.map((ingredient) => {
-    const max = maxUsedAmount(ingredient);
-    const usedInvalid = invalidIds.has(ingredient.id);
-    return `
-    <div class="ingredient-grid" data-ingredient="${ingredient.id}">
-      ${ingredientNameCell(editorKey, ingredient)}
-      <input aria-label="Preço da compra" inputmode="decimal" placeholder="R$ 0,00" data-editor="${editorKey}" data-ingredient="${ingredient.id}" data-ingredient-field="packagePrice" value="${escapeHtml(ingredient.packagePrice)}" />
-      <input aria-label="Quantidade comprada" inputmode="decimal" data-editor="${editorKey}" data-ingredient="${ingredient.id}" data-ingredient-field="packageAmount" value="${escapeHtml(ingredient.packageAmount)}" />
-      <input aria-label="Quantidade usada" inputmode="decimal" required class="${usedInvalid ? 'is-invalid' : ''}" placeholder="${max ? `Máx. ${max}` : 'Obrigatório'}" data-editor="${editorKey}" data-ingredient="${ingredient.id}" data-ingredient-field="usedAmount" value="${escapeHtml(ingredient.usedAmount)}" />
-      <input aria-label="Unidade" data-editor="${editorKey}" data-ingredient="${ingredient.id}" data-ingredient-field="unit" value="${escapeHtml(ingredient.unit)}" />
-      <button class="ghost" type="button" data-action="remove-ingredient" data-editor="${editorKey}" data-id="${ingredient.id}">Remover</button>
-    </div>`;
-  }).join('')}
-  <div class="ingredient-rows-actions">
-    ${addRowLink('Adicionar ingrediente', 'add-ingredient', editorKey)}
-  </div>`;
-}
-
 // Mesma linha de ingrediente, em formato de tabela (usado na edição de uma
 // receita já salva, onde a lista tende a ser revisada com mais calma).
 // Linhas rascunho (ainda sendo preenchidas no modal de adicionar) ficam de
@@ -521,22 +501,22 @@ function validateIngredientAmounts(ingredients) {
   return null;
 }
 
+// Um bloco por nível de lucro (Mínimo/Média/Máximo), cada um com seus
+// valores lado a lado — em vez de uma tabela larga que corta em painéis
+// estreitos.
 function tiersTable(pricing) {
-  return `<table style="width:100%; border-collapse:collapse;">
-    <thead><tr style="text-align:left; color:#8e6a61; font-size:0.82rem;">
-      <th style="padding:8px;">Nível</th><th style="padding:8px;">Preço un.</th><th style="padding:8px;">Preço/forma</th><th style="padding:8px;">Lucro líq. un.</th><th style="padding:8px;">Lucro líq. total</th>
-    </tr></thead>
-    <tbody>
-      ${pricing.tiers.map((tier) => `
-        <tr style="border-top:1px solid #f0ded6;">
-          <td style="padding:10px 8px; font-weight:800; color:#8f3f37;">${escapeHtml(tier.name)}</td>
-          <td style="padding:10px 8px; font-weight:800;">${formatCurrency(tier.unitPrice)}</td>
-          <td style="padding:10px 8px;">${formatCurrency(tier.totalPrice)}</td>
-          <td style="padding:10px 8px;">${formatCurrency(tier.netProfitUnit)}</td>
-          <td style="padding:10px 8px;">${formatCurrency(tier.netProfitTotal)}</td>
-        </tr>`).join('')}
-    </tbody>
-  </table>`;
+  return `<div class="tiers-list">
+    ${pricing.tiers.map((tier) => `
+      <div class="tier-row">
+        <strong class="tier-name">${escapeHtml(tier.name)}</strong>
+        <div class="tier-stats">
+          <div><span>Preço un.</span><strong>${formatCurrency(tier.unitPrice)}</strong></div>
+          <div><span>Preço/forma</span><strong>${formatCurrency(tier.totalPrice)}</strong></div>
+          <div><span>Lucro líq. un.</span><strong>${formatCurrency(tier.netProfitUnit)}</strong></div>
+          <div><span>Lucro líq. total</span><strong>${formatCurrency(tier.netProfitTotal)}</strong></div>
+        </div>
+      </div>`).join('')}
+  </div>`;
 }
 
 function pricingResultBlock(editor) {
@@ -549,7 +529,7 @@ function pricingResultBlock(editor) {
       <div><dt>Custo total da receita</dt><dd>${formatCurrency(pricing.totalCost)}</dd></div>
       <div class="highlight"><dt>Custo por unidade</dt><dd>${formatCurrency(pricing.unitCost)}</dd></div>
     </dl>
-    <div style="margin-top:18px; overflow-x:auto;">${tiersTable(pricing)}</div>
+    <div style="margin-top:18px;">${tiersTable(pricing)}</div>
   </aside>`;
 }
 
@@ -747,29 +727,30 @@ function confirmLeaveModal() {
 // Modal de "adicionar ingrediente" na edição de uma receita: reaproveita a
 // mesma linha/combobox da tabela, só que a linha (rascunho) fica escondida da
 // tabela até o usuário clicar em "Inserir".
+// Modal de "adicionar ingrediente" (usado tanto no wizard quanto na edição de
+// uma receita já salva): mesma linha/combobox da tabela, com "Inserir" no
+// final da linha em vez de "Remover" — a linha (rascunho) só entra na tabela
+// de fato depois de confirmada.
 function addRecipeIngredientModal(data) {
-  const draft = state.detail.ingredients.find((i) => i.id === data.rowId);
+  const ed = getEditor(data.editorKey);
+  const draft = ed.ingredients.find((i) => i.id === data.rowId);
   if (!draft) return '';
   const max = maxUsedAmount(draft);
   return `
-    <div class="modal-box">
+    <div class="modal-box modal-box-wide">
       <div class="modal-header"><h3>Adicionar ingrediente</h3><button type="button" class="icon-btn ghost" data-action="close-modal">${icon('close')}</button></div>
       ${data.error ? `<p class="auth-error">${escapeHtml(data.error)}</p>` : ''}
-      <div class="modal-form">
-        <label>Ingrediente</label>
-        ${ingredientNameCell('detail', draft)}
-        <div class="field-grid">
-          <label>Preço da compra<input aria-label="Preço da compra" inputmode="decimal" placeholder="R$ 0,00" data-editor="detail" data-ingredient="${draft.id}" data-ingredient-field="packagePrice" value="${escapeHtml(draft.packagePrice)}" /></label>
-          <label>Qtd. comprada<input aria-label="Quantidade comprada" inputmode="decimal" data-editor="detail" data-ingredient="${draft.id}" data-ingredient-field="packageAmount" value="${escapeHtml(draft.packageAmount)}" /></label>
-        </div>
-        <div class="field-grid">
-          <label>Qtd. usada<input aria-label="Quantidade usada" inputmode="decimal" placeholder="${max ? `Máx. ${max}` : 'Obrigatório'}" data-editor="detail" data-ingredient="${draft.id}" data-ingredient-field="usedAmount" value="${escapeHtml(draft.usedAmount)}" /></label>
-          <label>Unidade<input aria-label="Unidade" data-editor="detail" data-ingredient="${draft.id}" data-ingredient-field="unit" value="${escapeHtml(draft.unit)}" /></label>
-        </div>
-        <div class="save-actions">
-          <button type="button" data-action="confirm-add-recipe-ingredient">Inserir</button>
-          <button type="button" class="ghost" data-action="close-modal">Cancelar</button>
-        </div>
+      <div class="ingredient-grid header-row" aria-hidden="true"><span>Ingrediente</span><span>Preço da compra</span><span>Qtd. comprada</span><span>Qtd. usada</span><span>Un.</span><span></span></div>
+      <div class="ingredient-grid">
+        ${ingredientNameCell(data.editorKey, draft)}
+        <input aria-label="Preço da compra" inputmode="decimal" placeholder="R$ 0,00" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="packagePrice" value="${escapeHtml(draft.packagePrice)}" />
+        <input aria-label="Quantidade comprada" inputmode="decimal" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="packageAmount" value="${escapeHtml(draft.packageAmount)}" />
+        <input aria-label="Quantidade usada" inputmode="decimal" placeholder="${max ? `Máx. ${max}` : 'Obrigatório'}" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="usedAmount" value="${escapeHtml(draft.usedAmount)}" />
+        <input aria-label="Unidade" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="unit" value="${escapeHtml(draft.unit)}" />
+        <button type="button" data-action="confirm-add-recipe-ingredient">Inserir</button>
+      </div>
+      <div class="save-actions">
+        <button type="button" class="ghost" data-action="close-modal">Cancelar</button>
       </div>
     </div>`;
 }
@@ -914,7 +895,7 @@ function renderWizard() {
       ${editor.step === 2 ? `
         <h3>Selecione os ingredientes/embalagens da base e informe a quantidade usada</h3>
         ${editor.errors.ingredients ? `<p class="form-error">${escapeHtml(editor.errors.ingredients)}</p>` : ''}
-        ${ingredientRows('wizard', editor.ingredients, editor.errors.invalidIngredientIds || new Set())}` : ''}
+        ${ingredientsTable('wizard', editor.ingredients, editor.errors.invalidIngredientIds || new Set())}` : ''}
       ${editor.step === 3 ? `<div class="field-grid">${fieldFor('wizard', 'yieldAmount', 'Quantas unidades saem dessa receita (Qnt. por forma)', editor.yieldAmount, 'decimal', editor.errors.yieldAmount)}</div>` : ''}
       ${editor.step === 4 ? `<h3>Adicione uma foto da receita (opcional)</h3>${photoUploadField('wizard', editor)}` : ''}
       ${editor.step === 5 ? renderWizardReview(editor) : ''}
@@ -930,19 +911,22 @@ function renderWizard() {
 function renderWizardReview(editor) {
   const pricing = pricingFor(editor);
   const photoSrc = editor.photoPreviewUrl || editor.photoUrl || '';
-  return `<div class="wizard-review ${photoSrc ? 'wizard-review-with-photo' : ''}">
-    ${photoSrc ? `<div class="wizard-review-photo"><img src="${photoSrc}" alt="" /></div>` : ''}
-    <div class="wizard-review-info">
-      <h3>${escapeHtml(editor.productName || 'Receita sem nome')}</h3>
-      <p class="muted">Rendimento: ${escapeHtml(editor.yieldAmount || '0')} un. · ${editor.ingredients.length} item(ns)</p>
-      <dl>
-        <div><dt>Custo dos ingredientes</dt><dd>${formatCurrency(pricing.ingredientsCost)}</dd></div>
-        <div><dt>Despesas alocadas</dt><dd>${formatCurrency(pricing.expensesCost)}</dd></div>
-        <div><dt>Custo total</dt><dd>${formatCurrency(pricing.totalCost)}</dd></div>
-        <div><dt>Custo por unidade</dt><dd>${formatCurrency(pricing.unitCost)}</dd></div>
-      </dl>
-      <div style="margin-top:16px; overflow-x:auto;">${tiersTable(pricing)}</div>
+  const itemCount = editor.ingredients.filter((i) => !i.draft).length;
+  return `<div class="wizard-review">
+    <div class="wizard-review-header">
+      ${photoSrc ? `<img src="${photoSrc}" alt="" class="wizard-review-photo" />` : ''}
+      <div>
+        <h3>${escapeHtml(editor.productName || 'Receita sem nome')}</h3>
+        <p class="muted">Rendimento: ${escapeHtml(editor.yieldAmount || '0')} un. · ${itemCount} item(ns)</p>
+      </div>
     </div>
+    <dl>
+      <div><dt>Custo dos ingredientes</dt><dd>${formatCurrency(pricing.ingredientsCost)}</dd></div>
+      <div><dt>Despesas alocadas</dt><dd>${formatCurrency(pricing.expensesCost)}</dd></div>
+      <div><dt>Custo total</dt><dd>${formatCurrency(pricing.totalCost)}</dd></div>
+      <div><dt>Custo por unidade</dt><dd>${formatCurrency(pricing.unitCost)}</dd></div>
+    </dl>
+    <div style="margin-top:16px;">${tiersTable(pricing)}</div>
   </div>`;
 }
 
@@ -1282,7 +1266,7 @@ async function handleWizardSave() {
         yield_amount: Math.max(1, Math.floor(toNumberSafe(ed.yieldAmount) || 1)),
         ...(photoUrl ? { photo_url: photoUrl } : {}),
       },
-      ed.ingredients.filter((i) => i.name.trim()),
+      ed.ingredients.filter((i) => i.name.trim() && !i.draft),
     );
     await loadUserData();
     showSuccess('Receita criada com sucesso!');
@@ -1587,17 +1571,19 @@ async function handleConfirmDelete() {
   if (modal.kind === 'product') await handleDeleteDetail(modal.id);
 }
 
-// Abre o modal de adicionar ingrediente na edição de uma receita: cria uma
-// linha rascunho (escondida da tabela) que só entra de fato ao confirmar.
-function openAddRecipeIngredientModal() {
+// Abre o modal de adicionar ingrediente (wizard ou edição de receita): cria
+// uma linha rascunho (escondida da tabela) que só entra de fato ao confirmar.
+function openAddRecipeIngredientModal(editorKey) {
+  const ed = getEditor(editorKey);
   const draft = newIngredient({ draft: true });
-  state.detail.ingredients.push(draft);
-  openModal('add-recipe-ingredient', { rowId: draft.id });
+  ed.ingredients.push(draft);
+  openModal('add-recipe-ingredient', { editorKey, rowId: draft.id });
 }
 
 function handleConfirmAddRecipeIngredient() {
-  const rowId = state.activeModal?.rowId;
-  const draft = state.detail.ingredients.find((i) => i.id === rowId);
+  const { editorKey, rowId } = state.activeModal || {};
+  const ed = getEditor(editorKey);
+  const draft = ed.ingredients.find((i) => i.id === rowId);
   if (!draft) {
     closeModal();
     return;
@@ -1644,14 +1630,15 @@ async function handleDeleteSupplier(id) {
 
 // ---------------- Listeners globais ----------------
 
-app.addEventListener('change', (event) => {
+app.addEventListener('change', async (event) => {
   const target = event.target;
   if (!target.dataset || !target.dataset.photoInput) return;
   const file = target.files?.[0];
   if (!file) return;
   const ed = getEditor(target.dataset.photoInput);
-  ed.photoFile = file;
-  ed.photoPreviewUrl = URL.createObjectURL(file);
+  const compressed = await compressImageToWebp(file);
+  ed.photoFile = compressed;
+  ed.photoPreviewUrl = URL.createObjectURL(compressed);
   render();
 });
 
@@ -1770,12 +1757,7 @@ app.addEventListener('click', (event) => {
       render();
       break;
     case 'add-ingredient':
-      if (editorKey === 'detail') {
-        openAddRecipeIngredientModal();
-      } else {
-        getEditor(editorKey).ingredients.push(newIngredient());
-        render();
-      }
+      openAddRecipeIngredientModal(editorKey);
       break;
     case 'confirm-add-recipe-ingredient':
       handleConfirmAddRecipeIngredient();

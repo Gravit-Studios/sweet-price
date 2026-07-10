@@ -21,14 +21,14 @@
     display: grid;
     gap: 12px;
     margin: 20px 0 0;
-  }
 
-  div {
-    display: flex;
-    justify-content: space-between;
-    gap: 18px;
-    border-bottom: 1px solid $secondary-200;
-    padding-bottom: 12px;
+    div {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      border-bottom: 1px solid $secondary-200;
+      padding-bottom: 12px;
+    }
   }
 
   dt {
@@ -46,6 +46,53 @@
     border-radius: $radius-md;
     background: $surface-tint;
     padding: 16px;
+  }
+}
+
+// Níveis de lucro em lista (um bloco por nível), em vez de tabela larga:
+// evita colunas espremidas/cortadas em telas ou painéis estreitos.
+.tiers-list {
+  display: grid;
+  gap: 16px;
+}
+
+.tier-row {
+  border-top: 1px solid $secondary-200;
+  padding-top: 16px;
+
+  &:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+.tier-name {
+  display: block;
+  color: $primary-500;
+  font-size: 1.05rem;
+  margin-bottom: 10px;
+}
+
+.tier-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 28px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  span {
+    font-size: $fs-xs;
+    color: $ink-700;
+    font-weight: $fw-bold;
+  }
+
+  strong {
+    font-size: 1rem;
+    font-weight: $fw-black;
   }
 }
 

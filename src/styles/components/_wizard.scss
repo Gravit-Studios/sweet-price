@@ -81,30 +81,29 @@
     display: grid;
     gap: 10px;
     margin: 0;
-  }
 
-  div {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid $secondary-200;
-    padding-bottom: 8px;
-  }
-}
-
-.wizard-review-with-photo {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 24px;
-  align-items: start;
-
-  @include respond-down($bp-tablet) {
-    grid-template-columns: 1fr;
+    div {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid $secondary-200;
+      padding-bottom: 8px;
+    }
   }
 }
 
-.wizard-review-photo img {
-  width: 100%;
-  aspect-ratio: 1;
+// Foto + nome no topo, informações de custo/preços abaixo em largura cheia
+// (evita espremer a tabela de níveis ao lado da foto).
+.wizard-review-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.wizard-review-photo {
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
   object-fit: cover;
   border-radius: $radius-md;
   border: 1px solid $border;

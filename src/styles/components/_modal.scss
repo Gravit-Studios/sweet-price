@@ -23,6 +23,12 @@
   animation: modal-pop-in 0.2s ease;
 }
 
+// Variante mais larga: usada quando o conteúdo é uma linha de tabela
+// (ex.: adicionar ingrediente), que precisa de mais espaço horizontal.
+.modal-box-wide {
+  width: min(720px, 100%);
+}
+
 .modal-header {
   display: flex;
   align-items: center;
