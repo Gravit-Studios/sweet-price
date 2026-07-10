@@ -23,6 +23,18 @@
   animation: modal-pop-in 0.2s ease;
 }
 
+// Cada re-render (digitar em um campo do modal, por exemplo) recria o DOM do
+// modal do zero. Sem isso, a animação de entrada tocaria de novo a cada
+// tecla, parecendo que a tela "pisca". Aplicada pelo JS (modalOverlay) a
+// partir da segunda renderização do mesmo modal.
+.no-anim-overlay {
+  animation: none;
+
+  .modal-box {
+    animation: none;
+  }
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -56,51 +68,6 @@
   justify-items: center;
   gap: 14px;
   padding: 40px 32px;
-}
-
-// Gotas de chocolate subindo de baixo, atrás do check — um toque temático de
-// confeitaria na confirmação de sucesso (usada em qualquer "salvo!" do app).
-.success-drops {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.drop {
-  position: absolute;
-  bottom: -20px;
-  width: 12px;
-  height: 16px;
-  background: linear-gradient(160deg, #8a5a3c, #4a2f1f);
-  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-  opacity: 0;
-  animation: drop-rise 1.8s ease-in infinite;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: rgba(#fff, 0.5);
-  }
-
-  &:nth-child(1) { left: 12%; animation-delay: 0s; }
-  &:nth-child(2) { left: 30%; width: 9px; height: 12px; animation-delay: 0.3s; }
-  &:nth-child(3) { left: 50%; animation-delay: 0.15s; }
-  &:nth-child(4) { left: 68%; width: 10px; height: 14px; animation-delay: 0.45s; }
-  &:nth-child(5) { left: 86%; animation-delay: 0.25s; }
-}
-
-@keyframes drop-rise {
-  0% { transform: translateY(0) scale(0.7); opacity: 0; }
-  20% { opacity: 0.9; }
-  75% { opacity: 0.4; }
-  100% { transform: translateY(-160px) scale(1); opacity: 0; }
 }
 
 .success-check {

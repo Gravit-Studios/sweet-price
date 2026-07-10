@@ -83,8 +83,8 @@
 .delivery-shortcut {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 0.6rem 1rem;
+  gap: 10px;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
   border-radius: $radius-sm;
   background: $surface;
   border: 1px solid $border;
@@ -97,10 +97,27 @@
   &:hover {
     filter: brightness(0.96);
   }
+}
 
-  .icon {
-    width: 16px;
-    height: 16px;
-    color: $secondary-500;
-  }
+// Selo colorido por marca de delivery (iFood, 99, Keeta...) — como não há
+// logos oficiais disponíveis, cor + sigla dão o reconhecimento visual.
+// Fonte única: DELIVERY_BRANDS (main.js), usado aqui e nos campos da Empresa.
+.delivery-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: $fw-black;
+  font-size: 0.85rem;
+  letter-spacing: -0.02em;
+}
+
+.delivery-badge-sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.7rem;
 }

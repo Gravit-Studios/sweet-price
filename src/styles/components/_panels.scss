@@ -40,3 +40,18 @@
   padding: 40px 20px;
   color: $ink-400;
 }
+
+.delivery-field-list {
+  display: grid;
+  gap: 16px;
+}
+
+.delivery-field-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  label {
+    flex: 1;
+  }
+}

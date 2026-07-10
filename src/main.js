@@ -150,10 +150,17 @@ function restoreFocus(restore) {
   if (!restore) return;
   const el = app.querySelector(restore.selector);
   if (!el) return;
+  // Cada tecla digitada recria esse elemento do zero (innerHTML novo) e o
+  // refoca aqui. Sem isso, a transição de border-color/box-shadow do :focus
+  // (ver _forms.scss) tocava de novo a cada letra, dando a impressão de tela
+  // piscando. Só suprimimos a transição neste refoco programático — o foco
+  // "de verdade" (clique, tab) continua com a transição suave.
+  el.classList.add('no-transition');
   el.focus();
   if (typeof restore.selStart === 'number' && el.setSelectionRange) {
     try { el.setSelectionRange(restore.selStart, restore.selEnd); } catch { /* ignore */ }
   }
+  requestAnimationFrame(() => el.classList.remove('no-transition'));
 }
 
 // ---------------- Dados do usuário ----------------
@@ -341,8 +348,16 @@ function showSuccess(message) {
   }, 1800);
 }
 
+// Cada re-render (a cada tecla digitada, por exemplo) recria o DOM do modal
+// do zero, o que replicaria a animação de entrada (fade/pop) a cada
+// keystroke e dava a impressão de tela "piscando". Essa flag marca se o
+// modal atualmente aberto já tocou a animação uma vez, para as próximas
+// renderizações do mesmo modal pularem a animação.
+let modalHasAnimatedIn = false;
+
 function openModal(type, data = {}) {
   state.activeModal = { type, error: '', loading: false, ...data };
+  modalHasAnimatedIn = false;
   render();
 }
 
@@ -534,7 +549,7 @@ function ingredientsTable(editorKey, ingredients, invalidIds = new Set()) {
         return `
         <tr data-ingredient="${ingredient.id}">
           <td>${ingredientNameCell(editorKey, ingredient)}</td>
-          <td><input aria-label="Preço da compra" inputmode="decimal" placeholder="R$ 0,00" data-editor="${editorKey}" data-ingredient="${ingredient.id}" data-ingredient-field="packagePrice" value="${escapeHtml(ingredient.packagePrice)}" /></td>
+          <td><div class="input-prefix"><span class="prefix">R$</span><input aria-label="Preço da compra" inputmode="decimal" placeholder="0,00" data-editor="${editorKey}" data-ingredient="${ingredient.id}" data-ingredient-field="packagePrice" value="${escapeHtml(ingredient.packagePrice)}" /></div></td>
           <td><input aria-label="Quantidade comprada" inputmode="decimal" data-editor="${editorKey}" data-ingredient="${ingredient.id}" data-ingredient-field="packageAmount" value="${escapeHtml(ingredient.packageAmount)}" /></td>
           <td><input aria-label="Quantidade usada" inputmode="decimal" required class="${usedInvalid ? 'is-invalid' : ''}" placeholder="${max ? `Máx. ${max}` : 'Obrigatório'}" data-editor="${editorKey}" data-ingredient="${ingredient.id}" data-ingredient-field="usedAmount" value="${escapeHtml(ingredient.usedAmount)}" /></td>
           <td><input aria-label="Unidade" data-editor="${editorKey}" data-ingredient="${ingredient.id}" data-ingredient-field="unit" value="${escapeHtml(ingredient.unit)}" /></td>
@@ -659,7 +674,7 @@ function editIngredientModal(data) {
       <form data-form="edit-ingredient" class="modal-form">
         <label>Nome<input name="name" value="${escapeHtml(data.name)}" required /></label>
         <div class="field-grid">
-          <label>Preço da embalagem (R$)<input name="packagePrice" inputmode="decimal" placeholder="R$ 0,00" value="${escapeHtml(data.packagePrice)}" required /></label>
+          <label>Preço da embalagem<div class="input-prefix"><span class="prefix">R$</span><input name="packagePrice" inputmode="decimal" placeholder="0,00" value="${escapeHtml(data.packagePrice)}" required /></div></label>
           <label>Qtd. da embalagem<input name="packageAmount" inputmode="decimal" value="${escapeHtml(data.packageAmount)}" required /></label>
         </div>
         <div class="field-grid">
@@ -717,7 +732,7 @@ function addExpenseModal(data) {
       <form data-form="add-expense" class="modal-form">
         <label>Nome da despesa<input name="name" required /></label>
         <div class="field-grid">
-          <label>Valor mensal<input name="monthlyValue" inputmode="decimal" placeholder="R$ 0,00" /></label>
+          <label>Valor mensal<div class="input-prefix"><span class="prefix">R$</span><input name="monthlyValue" inputmode="decimal" placeholder="0,00" /></div></label>
           <label>% por receita<input name="percentage" inputmode="decimal" value="1" required /></label>
         </div>
         <div class="save-actions">
@@ -736,7 +751,7 @@ function addIngredientModal(data) {
       <form data-form="new-ingredient" class="modal-form">
         <label>Nome<input name="name" required /></label>
         <div class="field-grid">
-          <label>Preço da compra<input name="packagePrice" inputmode="decimal" placeholder="R$ 0,00" required /></label>
+          <label>Preço da compra<div class="input-prefix"><span class="prefix">R$</span><input name="packagePrice" inputmode="decimal" placeholder="0,00" required /></div></label>
           <label>Qtd. comprada<input name="packageAmount" inputmode="decimal" placeholder="Kg/Gramas" required /></label>
         </div>
         <div class="field-grid">
@@ -811,7 +826,7 @@ function addRecipeIngredientModal(data) {
             ${state.savedIngredients.map((si) => `<option value="${escapeHtml(si.name)}" ${draft.name === si.name ? 'selected' : ''}>${escapeHtml(si.name)}</option>`).join('')}
           </select>
         </label>
-        <label>Preço da compra<input aria-label="Preço da compra" inputmode="decimal" placeholder="R$ 0,00" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="packagePrice" value="${escapeHtml(draft.packagePrice)}" /></label>
+        <label>Preço da compra<div class="input-prefix"><span class="prefix">R$</span><input aria-label="Preço da compra" inputmode="decimal" placeholder="0,00" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="packagePrice" value="${escapeHtml(draft.packagePrice)}" /></div></label>
         <label>Qtd. comprada<input aria-label="Quantidade comprada" inputmode="decimal" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="packageAmount" value="${escapeHtml(draft.packageAmount)}" /></label>
         <label>Qtd. usada<input aria-label="Quantidade usada" inputmode="decimal" placeholder="${max ? `Máx. ${max}` : 'Obrigatório'}" data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="usedAmount" value="${escapeHtml(draft.usedAmount)}" /></label>
         <label>Unidade<input aria-label="Unidade" placeholder="g, ml, un..." data-editor="${data.editorKey}" data-ingredient="${draft.id}" data-ingredient-field="unit" value="${escapeHtml(draft.unit)}" /></label>
@@ -845,10 +860,6 @@ function modalOverlay() {
   if (state.successModal) {
     return `<div class="modal-overlay">
       <div class="modal-box modal-success">
-        <div class="success-drops" aria-hidden="true">
-          <span class="drop"></span><span class="drop"></span><span class="drop"></span>
-          <span class="drop"></span><span class="drop"></span>
-        </div>
         <div class="success-check">${icon('check')}</div>
         <p>${escapeHtml(state.successModal)}</p>
       </div>
@@ -868,7 +879,9 @@ function modalOverlay() {
     'add-recipe-ingredient': addRecipeIngredientModal,
   }[data.type];
   if (!content) return '';
-  return `<div class="modal-overlay">${content(data)}</div>`;
+  const overlayClass = modalHasAnimatedIn ? 'modal-overlay no-anim-overlay' : 'modal-overlay';
+  modalHasAnimatedIn = true;
+  return `<div class="${overlayClass}">${content(data)}</div>`;
 }
 
 // ---------------- Páginas ----------------
@@ -879,15 +892,26 @@ function isHttpUrl(value) {
   return /^https?:\/\//i.test(value || '');
 }
 
+// Fonte única dos apps de delivery suportados: usada tanto nos campos de
+// configuração (Empresa) quanto nos atalhos da home. Cor + marca dão um
+// selo visual reconhecível sem depender de logos externos.
+const DELIVERY_BRANDS = [
+  { key: 'ifoodUrl', label: 'iFood', mark: 'iF', color: '#EA1D2C' },
+  { key: 'link99Url', label: '99', mark: '99', color: '#FF6B00' },
+  { key: 'keetaUrl', label: 'Keeta', mark: 'K', color: '#0F172A' },
+];
+
+function deliveryBadge(brand, extraClass = '') {
+  return `<span class="delivery-badge ${extraClass}" style="background:${brand.color};" aria-hidden="true">${brand.mark}</span>`;
+}
+
 function deliveryShortcuts() {
-  const links = [
-    { label: 'iFood', url: state.company.ifoodUrl },
-    { label: '99', url: state.company.link99Url },
-    { label: 'Keeta', url: state.company.keetaUrl },
-  ].filter((l) => isHttpUrl(l.url));
+  const links = DELIVERY_BRANDS
+    .map((brand) => ({ brand, url: state.company[brand.key] }))
+    .filter((l) => isHttpUrl(l.url));
   if (!links.length) return '';
   return `<div class="delivery-shortcuts">
-    ${links.map((l) => `<a class="delivery-shortcut" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${icon('truck')}<span>${escapeHtml(l.label)}</span></a>`).join('')}
+    ${links.map((l) => `<a class="delivery-shortcut" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${deliveryBadge(l.brand, 'delivery-badge-sm')}<span>${escapeHtml(l.brand.label)}</span></a>`).join('')}
   </div>`;
 }
 
@@ -1125,7 +1149,7 @@ function renderDespesasPage() {
         const allocated = toNumberSafe(expense.monthly_value) * (toNumberSafe(expense.percentage) / 100);
         return `<div class="ingredient-grid" style="grid-template-columns: 1.4fr 1fr 1fr 1fr 80px;" data-expense-id="${expense.id}">
           <input aria-label="Despesa" data-expense-id="${expense.id}" data-expense-field="name" value="${escapeHtml(expense.name)}" />
-          <input aria-label="Valor mensal" inputmode="decimal" placeholder="R$ 0,00" data-expense-id="${expense.id}" data-expense-field="monthly_value" value="${toNumberSafe(expense.monthly_value) ? escapeHtml(expense.monthly_value) : ''}" />
+          <div class="input-prefix"><span class="prefix">R$</span><input aria-label="Valor mensal" inputmode="decimal" placeholder="0,00" data-expense-id="${expense.id}" data-expense-field="monthly_value" value="${toNumberSafe(expense.monthly_value) ? escapeHtml(expense.monthly_value) : ''}" /></div>
           <input aria-label="Percentual" inputmode="decimal" data-expense-id="${expense.id}" data-expense-field="percentage" value="${escapeHtml(expense.percentage)}" />
           <span class="muted" style="align-self:center;">${formatCurrency(allocated)}</span>
           <button type="button" class="ghost" data-action="delete-expense" data-id="${expense.id}">Excluir</button>
@@ -1253,10 +1277,12 @@ function renderEmpresaPage() {
     <div class="panel">
       <h3>Links de delivery</h3>
       <p class="muted">Adicione os links da sua loja nos apps de entrega para exibir atalhos na página inicial.</p>
-      <div class="field-grid">
-        <label>iFood<input name="ifoodUrl" type="url" data-company-field="ifoodUrl" value="${escapeHtml(state.company.ifoodUrl)}" placeholder="https://..." /></label>
-        <label>99<input name="link99Url" type="url" data-company-field="link99Url" value="${escapeHtml(state.company.link99Url)}" placeholder="https://..." /></label>
-        <label>Keeta<input name="keetaUrl" type="url" data-company-field="keetaUrl" value="${escapeHtml(state.company.keetaUrl)}" placeholder="https://..." /></label>
+      <div class="delivery-field-list">
+        ${DELIVERY_BRANDS.map((brand) => `
+          <div class="delivery-field-row">
+            ${deliveryBadge(brand)}
+            <label>${escapeHtml(brand.label)}<input name="${brand.key}" type="url" data-company-field="${brand.key}" value="${escapeHtml(state.company[brand.key])}" placeholder="https://..." /></label>
+          </div>`).join('')}
       </div>
     </div>`;
 }

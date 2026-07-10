@@ -25,6 +25,13 @@ textarea {
   &::placeholder {
     color: $ink-400;
   }
+
+  // Aplicada por um instante ao refocar um campo recriado pelo re-render (a
+  // cada tecla digitada) — sem isso a transição acima tocava de novo em cada
+  // letra e parecia que a tela piscava.
+  &.no-transition {
+    transition: none;
+  }
 }
 
 textarea {
@@ -84,6 +91,26 @@ label {
   .suffix {
     position: absolute;
     right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $ink-400;
+    font-weight: $fw-bold;
+    pointer-events: none;
+  }
+}
+
+// Máscara visual de moeda: "R$" fixo à esquerda de qualquer campo de valor
+// em reais (compra de ingrediente, despesa mensal etc.).
+.input-prefix {
+  position: relative;
+
+  input {
+    padding-left: 2.75rem;
+  }
+
+  .prefix {
+    position: absolute;
+    left: 1rem;
     top: 50%;
     transform: translateY(-50%);
     color: $ink-400;

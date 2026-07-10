@@ -268,6 +268,22 @@
   .combobox input {
     min-width: 160px;
   }
+
+  // Com todo o resto da linha em inputs de largura 100%, a coluna de ações
+  // (só um botão) fica espremida pelo table-layout automático — o flex
+  // centralizado então "vazava" o botão por cima da célula anterior. Uma
+  // largura mínima garante espaço de sobra, e alinhar à direita em vez de
+  // centralizar evita que o excedente (quando ainda existir) vá para o lado
+  // errado.
+  th:last-child,
+  td:last-child {
+    width: 1%;
+    min-width: 96px;
+  }
+
+  .data-table-actions {
+    justify-content: flex-end;
+  }
 }
 
 .data-table-actions {
@@ -278,5 +294,6 @@
   button {
     padding: 0.45rem 0.8rem;
     font-size: 0.82rem;
+    white-space: nowrap;
   }
 }
