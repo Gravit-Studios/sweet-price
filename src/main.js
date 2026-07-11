@@ -1789,6 +1789,23 @@ const NAV_GROUPS = [
   { key: 'controle', label: 'Controle', items: [{ route: 'ingredientes', label: 'Ingredientes' }, { route: 'despesas', label: 'Despesas' }, { route: 'lucro', label: 'Lucro' }] },
 ];
 
+// Alterna a classe "is-open" do trigger + painel de um dropdown de navbar
+// direto no DOM (sem passar por render()). Fecha qualquer outro dropdown
+// que porventura esteja aberto — só um por vez.
+function setNavDropdownOpen(menuKey, opening) {
+  app.querySelectorAll('.nav-dropdown-trigger').forEach((btn) => {
+    btn.classList.toggle('is-open', opening && btn.dataset.menu === menuKey);
+  });
+  app.querySelectorAll('.nav-dropdown-menu').forEach((menu) => {
+    menu.classList.toggle('is-open', opening && menu.dataset.menu === menuKey);
+  });
+}
+
+// O painel do dropdown fica sempre montado no DOM (aberto ou não) — só a
+// classe "is-open" muda — pra que abrir/fechar seja uma transição de CSS de
+// verdade (ver toggle-nav-menu no dispatch de cliques, que alterna a classe
+// direto no DOM em vez de passar por um render() completo, que recriaria o
+// nó do zero e pularia a animação).
 function navDropdown(group) {
   const isActive = group.items.some((item) => item.route === state.route.path);
   const isOpen = state.openNavMenu === group.key;
@@ -1796,9 +1813,11 @@ function navDropdown(group) {
     <button type="button" class="nav-link nav-dropdown-trigger ${isActive ? 'active' : ''} ${isOpen ? 'is-open' : ''}" data-action="toggle-nav-menu" data-menu="${group.key}">
       ${group.label}${icon('chevronDown')}
     </button>
-    ${isOpen ? `<div class="nav-dropdown-menu">
-      ${group.items.map((item) => `<button type="button" class="profile-dropdown-item ${state.route.path === item.route ? 'active' : ''}" data-action="goto" data-route="${item.route}">${item.label}</button>`).join('')}
-    </div>` : ''}
+    <div class="nav-dropdown-menu ${isOpen ? 'is-open' : ''}" data-menu="${group.key}">
+      <div class="nav-dropdown-menu-inner">
+        ${group.items.map((item) => `<button type="button" class="profile-dropdown-item ${state.route.path === item.route ? 'active' : ''}" data-action="goto" data-route="${item.route}">${item.label}</button>`).join('')}
+      </div>
+    </div>
   </li>`;
 }
 
@@ -3410,10 +3429,16 @@ app.addEventListener('click', (event) => {
       state.profileMenuOpen = !state.profileMenuOpen;
       render();
       break;
-    case 'toggle-nav-menu':
-      state.openNavMenu = state.openNavMenu === el.dataset.menu ? null : el.dataset.menu;
-      render();
+    case 'toggle-nav-menu': {
+      const menuKey = el.dataset.menu;
+      const opening = state.openNavMenu !== menuKey;
+      state.openNavMenu = opening ? menuKey : null;
+      // Alterna a classe direto no DOM (em vez de render()) pra abertura e
+      // fechamento tocarem a transição de CSS de verdade — um render()
+      // completo recriaria o nó já no estado final, sem animação.
+      setNavDropdownOpen(menuKey, opening);
       break;
+    }
     case 'accept-cookies':
       state.cookieConsent = true;
       localStorage.setItem('cookieConsent', 'accepted');
@@ -3423,10 +3448,15 @@ app.addEventListener('click', (event) => {
       state.adminAlertsOpen = !state.adminAlertsOpen;
       render();
       break;
-    case 'toggle-mobile-menu':
+    case 'toggle-mobile-menu': {
       state.mobileMenuOpen = !state.mobileMenuOpen;
-      render();
+      // Idem: alterna a classe no overlay já montado em vez de um render()
+      // completo, pra o slide-in/out (transform, ver _navbar.scss) animar.
+      const overlay = app.querySelector('.mobile-drawer-overlay');
+      if (overlay) overlay.classList.toggle('open', state.mobileMenuOpen);
+      else render();
       break;
+    }
     case 'open-change-password':
       state.profileMenuOpen = false;
       openModal('change-password');
@@ -3480,8 +3510,9 @@ app.addEventListener('click', (event) => {
     render();
   }
   if (state.openNavMenu && !event.target.closest('.nav-dropdown')) {
+    const menuKey = state.openNavMenu;
     state.openNavMenu = null;
-    render();
+    setNavDropdownOpen(menuKey, false);
   }
   if (state.adminAlertsOpen && !event.target.closest('.alerts-menu')) {
     state.adminAlertsOpen = false;
@@ -3497,7 +3528,9 @@ app.addEventListener('click', (event) => {
   }
   if (state.mobileMenuOpen && !event.target.closest('.mobile-drawer') && !event.target.closest('.navbar-menu-toggle')) {
     state.mobileMenuOpen = false;
-    render();
+    const overlay = app.querySelector('.mobile-drawer-overlay');
+    if (overlay) overlay.classList.remove('open');
+    else render();
   }
   if (event.target.classList.contains('modal-overlay')) {
     closeModal();

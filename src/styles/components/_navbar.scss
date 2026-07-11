@@ -361,11 +361,13 @@
   }
 }
 
+// Fica sempre montado no DOM (aberto ou não) — só a classe .is-open muda,
+// direto no JS (ver setNavDropdownOpen em main.js), pra abrir/fechar tocar
+// uma transição de CSS de verdade em vez de aparecer/sumir sem animação.
 .nav-dropdown-menu {
   position: absolute;
   top: calc(100% + 10px);
   left: 50%;
-  transform: translateX(-50%);
   min-width: 160px;
   background: $surface;
   border: 1px solid $border;
@@ -375,6 +377,19 @@
   display: grid;
   gap: 2px;
   z-index: 20;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
 }
 
 // Menu mobile: painel deslizando da lateral direita, ocupando a altura toda
@@ -467,13 +482,37 @@
     justify-content: space-between;
   }
 
+  // No drawer, "abrir/fechar" é uma altura animada (grid-template-rows 0fr
+  // → 1fr) em vez do fade/desloca do flutuante de desktop — o conteúdo
+  // então precisa de um wrapper com overflow:hidden pra ficar escondido
+  // enquanto a linha da grade ainda está em 0fr.
   .nav-dropdown-menu {
     position: static;
+    top: auto;
+    left: auto;
     transform: none;
     box-shadow: none;
     border: 0;
     background: none;
-    padding: 0 0 0 14px;
+    padding: 0;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s ease;
+
+    &.is-open {
+      grid-template-rows: 1fr;
+      transform: none;
+    }
+  }
+
+  .nav-dropdown-menu-inner {
+    overflow: hidden;
+    display: grid;
+    gap: 2px;
+    padding-left: 14px;
   }
 }
 
