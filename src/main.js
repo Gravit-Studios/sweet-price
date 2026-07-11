@@ -1218,7 +1218,7 @@ function renderProdutosPage() {
     ? state.savedProducts.filter((p) => p.name.toLowerCase().includes(query))
     : state.savedProducts;
   return `
-    ${pageBanner('Receitas', 'Suas receitas salvas', '<button type="button" data-action="start-wizard">+ Nova receita</button>')}
+    ${pageBanner('Receitas', 'Suas receitas salvas')}
     ${statusBox()}
     ${selectedCount > 0 ? `
       <div class="bulk-actions-bar">
@@ -1229,7 +1229,11 @@ function renderProdutosPage() {
         </div>
       </div>` : ''}
     <div class="panel">
-      ${state.savedProducts.length ? `<input class="search-input" type="search" name="productSearch" data-search="products" placeholder="Buscar por nome..." value="${escapeHtml(state.productSearch)}" />` : ''}
+      ${state.savedProducts.length ? `
+      <div class="search-row">
+        <input class="search-input" type="search" name="productSearch" data-search="products" placeholder="Buscar por nome..." value="${escapeHtml(state.productSearch)}" />
+        <button type="button" data-action="start-wizard">+ Nova receita</button>
+      </div>` : ''}
       ${state.dataLoading ? loadingMsg() : (
         state.savedProducts.length === 0 ? emptyState('Você ainda não salvou nenhuma receita.', true)
           : filtered.length ? productsTable(filtered) : emptyState('Nenhuma receita encontrada.', false)
@@ -1407,10 +1411,13 @@ function renderIngredientesPage() {
     : emptyState(query ? 'Nenhum ingrediente encontrado.' : 'Nenhum ingrediente cadastrado ainda.', false);
 
   return `
-    ${pageBanner('Base de ingredientes', 'Ingredientes e embalagens', '<button type="button" data-action="add-ingredient-modal">Adicionar novo</button>')}
+    ${pageBanner('Base de ingredientes', 'Ingredientes e embalagens')}
     ${statusBox()}
     <div class="panel">
-      <input class="search-input" type="search" name="ingredientSearch" data-search="ingredients" placeholder="Buscar por nome, categoria ou marca..." value="${escapeHtml(state.ingredientSearch)}" />
+      <div class="search-row">
+        <input class="search-input" type="search" name="ingredientSearch" data-search="ingredients" placeholder="Buscar por nome, categoria ou marca..." value="${escapeHtml(state.ingredientSearch)}" />
+        <button type="button" data-action="add-ingredient-modal">Adicionar novo</button>
+      </div>
       ${state.dataLoading ? loadingMsg() : list}
     </div>`;
 }
@@ -1508,10 +1515,13 @@ function renderFornecedoresPage() {
     : emptyState(query ? 'Nenhum fornecedor encontrado.' : 'Nenhum fornecedor cadastrado ainda.', false);
 
   return `
-    ${pageBanner('Base de fornecedores', 'Contatos', '<button type="button" data-action="add-supplier-modal">Adicionar novo</button>')}
+    ${pageBanner('Base de fornecedores', 'Contatos')}
     ${statusBox()}
     <div class="panel">
-      <input class="search-input" type="search" name="supplierSearch" data-search="suppliers" placeholder="Buscar por nome, contato ou e-mail..." value="${escapeHtml(state.supplierSearch)}" />
+      <div class="search-row">
+        <input class="search-input" type="search" name="supplierSearch" data-search="suppliers" placeholder="Buscar por nome, contato ou e-mail..." value="${escapeHtml(state.supplierSearch)}" />
+        <button type="button" data-action="add-supplier-modal">Adicionar novo</button>
+      </div>
       ${state.dataLoading ? loadingMsg() : list}
     </div>`;
 }
@@ -1546,10 +1556,13 @@ function renderClientesPage() {
     : emptyState(query ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado ainda.', false);
 
   return `
-    ${pageBanner('Base de clientes', 'Clientes', '<button type="button" data-action="add-customer-modal">Adicionar novo</button>')}
+    ${pageBanner('Base de clientes', 'Clientes')}
     ${statusBox()}
     <div class="panel">
-      <input class="search-input" type="search" name="customerSearch" data-search="customers" placeholder="Buscar por nome, telefone ou e-mail..." value="${escapeHtml(state.customerSearch)}" />
+      <div class="search-row">
+        <input class="search-input" type="search" name="customerSearch" data-search="customers" placeholder="Buscar por nome, telefone ou e-mail..." value="${escapeHtml(state.customerSearch)}" />
+        <button type="button" data-action="add-customer-modal">Adicionar novo</button>
+      </div>
       ${state.dataLoading ? loadingMsg() : list}
     </div>`;
 }

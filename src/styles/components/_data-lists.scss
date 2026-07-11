@@ -140,6 +140,29 @@
   }
 }
 
+// Busca + ação principal (Adicionar novo) lado a lado, já que o botão saiu
+// do header com foto pra ficar junto do resto do conteúdo da página.
+.search-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+
+  .search-input {
+    margin-bottom: 0;
+  }
+
+  @include respond-down($bp-tablet) {
+    flex-direction: column;
+    align-items: stretch;
+
+    > button {
+      width: 100%;
+    }
+  }
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;

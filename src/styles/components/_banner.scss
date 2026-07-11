@@ -61,8 +61,8 @@
 
 // Cabeçalho padrão (com foto) das páginas internas: mesma técnica do
 // .banner acima, só que mais baixo — cabe o título/eyebrow de um lado e a
-// ação (Adicionar novo, Salvar alterações...) do outro, como o
-// .section-header que ele substitui.
+// ação (Salvar alterações...) do outro, ambos ancorados no final do banner
+// em vez de centralizados verticalmente.
 .page-banner {
   position: relative;
   overflow: hidden;
@@ -70,9 +70,9 @@
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  min-height: 128px;
+  min-height: 168px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
 
   @include respond-down($bp-tablet) {
     margin-top: -20px;
@@ -102,7 +102,7 @@
   padding: 22px 32px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   gap: 16px;
   flex-wrap: wrap;
 
