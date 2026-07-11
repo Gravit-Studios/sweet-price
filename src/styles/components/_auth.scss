@@ -51,12 +51,15 @@
   }
 }
 
+// Mesma largura/centralização do .auth-form-inner, pra ficar alinhado com o
+// resto do conteúdo em vez de colado na borda do padding do .auth-form-side.
 .auth-brand {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  margin-bottom: 24px;
+  width: min(420px, 100%);
+  margin: 0 auto 24px;
   color: $primary-600;
   font-family: $font-heading;
   font-weight: $fw-black;

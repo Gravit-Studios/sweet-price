@@ -2063,7 +2063,7 @@ function authHtml() {
         </div>
       </div>
       <div class="auth-visual">
-        <img src="/assets/bg-login.webp" alt="" class="auth-visual-photo" />
+        <img src="/assets/pexels-anntarazevich-6036020.webp" alt="" class="auth-visual-photo" />
         <div class="auth-visual-overlay"></div>
         <blockquote class="auth-quote">
           <p>&ldquo;Preço certo é doce garantido: cada receita com a margem que ela merece.&rdquo;</p>
