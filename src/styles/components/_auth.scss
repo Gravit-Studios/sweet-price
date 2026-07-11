@@ -8,8 +8,13 @@
   display: flex;
   background: $surface;
 
+  // No mobile não há mais coluna de foto ao lado — a foto vira o fundo
+  // inteiro da tela (position: fixed em .auth-visual) e o formulário flutua
+  // por cima, como um cartão centralizado.
   @include respond-down($bp-tablet) {
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
   }
 }
 
@@ -20,8 +25,15 @@
   padding: 40px clamp(24px, 5vw, 64px);
 
   @include respond-down($bp-tablet) {
+    position: relative;
+    z-index: 1;
     flex: none;
-    padding: 28px 24px;
+    width: 100%;
+    max-width: 420px;
+    background: $surface;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-lift;
+    padding: 32px 24px;
   }
 }
 
@@ -65,8 +77,9 @@
   overflow: hidden;
 
   @include respond-down($bp-tablet) {
-    flex: none;
-    min-height: 260px;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
   }
 }
 
@@ -82,6 +95,13 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba($ink-900, 0.15) 0%, rgba($ink-900, 0) 30%, rgba($ink-900, 0.2) 62%, rgba($ink-900, 0.82) 100%);
+
+  // No mobile a foto é o fundo inteiro atrás do cartão de login — um
+  // escurecido uniforme (em vez do degradê pensado para a faixa de citação)
+  // ajuda o cartão branco a se destacar por cima.
+  @include respond-down($bp-tablet) {
+    background: rgba($ink-900, 0.35);
+  }
 }
 
 .auth-quote {
