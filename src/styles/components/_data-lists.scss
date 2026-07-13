@@ -383,28 +383,31 @@
   }
 
   .data-table-actions {
-    justify-content: flex-end;
+    text-align: right;
   }
 }
 
 // display:flex num <td> faz o navegador inserir uma célula de tabela
 // anônima ao redor dele (pra manter o layout de tabela válido) — a própria
 // <td> vira só um bloco comum *dentro* dessa célula anônima, sem esticar
-// pra altura da linha por conta própria. Sem height:100%, a borda inferior
-// deste td específico ficava mais alta que a das outras colunas sempre que
-// o conteúdo das ações era mais baixo que o resto da linha (ex.: dois
-// botões vs. o avatar+nome da primeira coluna).
+// pra altura da linha por conta própria (nem com height:100%, na prática —
+// a borda inferior deste td específico continuava mais alta que a das
+// outras colunas). Em vez de flex, a célula fica table-cell mesmo (como
+// qualquer outra), centralizada via vertical-align/text-align, com os
+// botões (inline-block por padrão) só com uma margem entre si.
 .data-table-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: center;
-  height: 100%;
+  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
 
   button {
     padding: 0.45rem 0.8rem;
     font-size: 0.82rem;
     white-space: nowrap;
+
+    & + button {
+      margin-left: 6px;
+    }
   }
 }
 

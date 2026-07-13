@@ -2787,7 +2787,7 @@ function renderPublicMenuList(menu) {
   const deliveryLinksHtml = links.length ? `
     <div class="menu-item-links">
       <div class="delivery-shortcuts">
-        ${links.map((l) => `<a class="delivery-shortcut" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${deliveryBadge(l.brand, 'delivery-badge-sm')}<span>${escapeHtml(l.brand.label)}</span></a>`).join('')}
+        ${links.map((l) => `<a class="delivery-shortcut delivery-shortcut-plain" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${deliveryBadge(l.brand, 'delivery-badge-sm')}<span>${escapeHtml(l.brand.label)}</span></a>`).join('')}
       </div>
     </div>` : '';
   return `

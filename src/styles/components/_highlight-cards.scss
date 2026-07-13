@@ -112,3 +112,11 @@
   width: 28px;
   height: 28px;
 }
+
+// Variante sem moldura (vitrine, um por item da lista) — só o selo e o
+// texto, sem o box com padding/borda do atalho padrão.
+.delivery-shortcut-plain {
+  padding: 0;
+  border: 0;
+  background: none;
+}
