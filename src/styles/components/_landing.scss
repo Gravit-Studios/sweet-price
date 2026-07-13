@@ -386,6 +386,7 @@
 .landing-hero-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 20px;
   flex-wrap: wrap;
   margin-bottom: 14px;
@@ -397,12 +398,12 @@
 }
 
 .landing-link-cta {
-  color: $white;
+  color: $primary-600;
   font-weight: $fw-bold;
   text-decoration: underline;
 
   &:hover {
-    color: $tertiary-300;
+    color: $primary-700;
   }
 }
 
@@ -635,8 +636,8 @@
 .landing-scrolly-mockup-item {
   grid-area: 1 / 1;
   opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.45s ease, transform 0.45s ease;
+  transform: translateY(28px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
   pointer-events: none;
 
   &.is-active {
@@ -650,6 +651,12 @@
     transform: none;
     pointer-events: auto;
   }
+}
+
+// O mockup entra um pouco depois do texto (texto primeiro, imagem em
+// seguida) — reforça a leitura de sequência em vez dos dois surgirem juntos.
+.landing-scrolly-mockup-item {
+  transition-delay: 0.15s;
 }
 
 .landing-scrolly-copy-item {
