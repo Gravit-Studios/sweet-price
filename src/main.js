@@ -2444,7 +2444,6 @@ function landingHeroV2() {
           <a href="#precos" class="landing-link-cta">Ver planos e preços</a>
         </div>
         <p class="landing-hero-note">Sem cartão de crédito para começar. Cancele quando quiser.</p>
-        ${inlineSvgPlaceholder('div', 'landing-hero-illustration', '/assets/cooking-illustration.svg')}
       </div>
     </section>`;
 }

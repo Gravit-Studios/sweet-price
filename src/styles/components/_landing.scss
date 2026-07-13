@@ -318,17 +318,6 @@
   font-size: 0.85rem;
 }
 
-.landing-hero-illustration {
-  width: min(420px, 90%);
-  margin: 32px auto 0;
-
-  svg {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-}
-
 .landing-section {
   padding: clamp(48px, 7vw, 80px) 0;
   text-align: center;
