@@ -100,6 +100,20 @@ function trialDaysLeft(profile) {
   return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
 }
 
+// Recurso do plano Pro: lembrete pra revisar os preços das receitas a cada
+// 30 dias (custos de ingrediente/despesa podem ter mudado desde a última
+// vez). Conta a partir da última revisão marcada ou, se nunca marcou, da
+// criação da conta.
+const PRICE_REVIEW_INTERVAL_DAYS = 30;
+
+function pricesNeedReview(profile) {
+  if (!isProPlan(profile)) return false;
+  const reference = profile.lastPriceReviewAt || profile.createdAt;
+  if (!reference) return false;
+  const days = (Date.now() - new Date(reference).getTime()) / (24 * 60 * 60 * 1000);
+  return days >= PRICE_REVIEW_INTERVAL_DAYS;
+}
+
 function defaultWizard() {
   return {
     step: 1,
@@ -177,6 +191,7 @@ const state = {
   mobileMenuOpen: false,
   openNavMenu: null,
   adminAlertsOpen: false,
+  priceReviewAlertOpen: false,
   successModal: '',
   activeModal: null,
   openCombobox: null,
@@ -258,6 +273,8 @@ async function loadUserData() {
       trialEndsAt: profile.trial_ends_at || null,
       planBillingCycle: profile.plan_billing_cycle || null,
       planRenewsAt: profile.plan_renews_at || null,
+      createdAt: profile.created_at || null,
+      lastPriceReviewAt: profile.last_price_review_at || null,
     };
     // Conta ainda não aprovada pelo super admin: não carrega o resto dos
     // dados nem libera o app — só a tela de "aguardando aprovação".
@@ -1575,16 +1592,16 @@ function renderIngredientesPage() {
     return !active || active.size === 0 || active.has(value(i));
   }));
   const list = filtered.length > 0
-    ? `<div class="table-scroll"><table class="data-table">
+    ? `<div class="table-scroll"><table class="data-table data-table-cards-mobile">
         <thead><tr>${INGREDIENT_COLUMNS.map((column) => filterableTh(column, state.savedIngredients)).join('')}<th></th></tr></thead>
         <tbody>
           ${filtered.map((i) => `
             <tr>
-              <td>${escapeHtml(i.name)}</td>
-              <td>${i.category ? escapeHtml(i.category) : '—'}</td>
-              <td>${formatCurrency(i.package_price)}</td>
-              <td>${escapeHtml(String(i.package_amount))}${escapeHtml(i.unit)}</td>
-              <td>${i.brand ? escapeHtml(i.brand) : '—'}</td>
+              <td><strong>${escapeHtml(i.name)}</strong></td>
+              <td data-label="Categoria">${i.category ? escapeHtml(i.category) : '—'}</td>
+              <td data-label="Preço">${formatCurrency(i.package_price)}</td>
+              <td data-label="Qtd.">${escapeHtml(String(i.package_amount))}${escapeHtml(i.unit)}</td>
+              <td data-label="Marca">${i.brand ? escapeHtml(i.brand) : '—'}</td>
               <td class="data-table-actions">
                 <button type="button" class="ghost" data-action="open-edit-ingredient" data-id="${i.id}">Editar</button>
                 <button type="button" class="ghost" data-action="delete-saved-ingredient" data-id="${i.id}">Excluir</button>
@@ -1616,7 +1633,7 @@ function renderDespesasPage() {
             const allocated = toNumberSafe(expense.monthly_value) * (toNumberSafe(expense.percentage) / 100);
             return `
             <tr>
-              <td>${escapeHtml(expense.name)}</td>
+              <td><strong>${escapeHtml(expense.name)}</strong></td>
               <td data-label="Valor mensal">${formatCurrency(expense.monthly_value)}</td>
               <td data-label="% por receita">${escapeHtml(String(expense.percentage))}%</td>
               <td data-label="Alocado">${formatCurrency(allocated)}</td>
@@ -2037,7 +2054,10 @@ function mobileDrawer(displayName) {
       <nav class="mobile-drawer">
         <div class="mobile-drawer-header">
           <span class="brand"><span class="brand-mark"></span> Doce Preço</span>
-          <button type="button" class="icon-btn ghost" data-action="toggle-mobile-menu" aria-label="Fechar menu">${icon('close')}</button>
+          <div class="mobile-drawer-header-actions">
+            ${pricesNeedReview(state.profile) ? priceReviewAlertMenu() : ''}
+            <button type="button" class="icon-btn ghost" data-action="toggle-mobile-menu" aria-label="Fechar menu">${icon('close')}</button>
+          </div>
         </div>
         <div class="mobile-drawer-plan">${planLabel(state.profile)}</div>
         <ul class="mobile-drawer-nav">
@@ -2144,6 +2164,26 @@ function adminAlertsMenu() {
     </div>`;
 }
 
+// Ícone de sino no navbar de contas Pro: aviso a cada 30 dias pra revisar
+// os preços das receitas (ver pricesNeedReview). Reaproveita o mesmo
+// componente visual do sino de avisos do admin.
+function priceReviewAlertMenu() {
+  return `
+    <div class="alerts-menu">
+      <button type="button" class="alerts-trigger" data-action="toggle-price-review-alert" aria-label="Aviso de revisão de preços">
+        ${icon('bell')}
+        <span class="alerts-badge">!</span>
+      </button>
+      ${state.priceReviewAlertOpen ? `
+        <div class="profile-dropdown alerts-dropdown">
+          <div class="alerts-item alerts-item-stacked">
+            <span><strong>Hora de revisar seus preços!</strong><br /><small class="muted">Já se passaram ${PRICE_REVIEW_INTERVAL_DAYS} dias desde a última revisão — seus custos de ingredientes e despesas podem ter mudado.</small></span>
+            <button type="button" class="primary" data-action="mark-price-review-done">Marcar como revisado</button>
+          </div>
+        </div>` : ''}
+    </div>`;
+}
+
 function shellHtml() {
   const displayName = state.profile.fullName || nameFromEmail(state.session.user.email);
   const isAdmin = state.profile.role === 'admin';
@@ -2170,6 +2210,7 @@ function shellHtml() {
           </ul>`}
           <div class="navbar-user">
             ${isAdmin ? adminAlertsMenu() : ''}
+            ${!isAdmin && pricesNeedReview(state.profile) ? priceReviewAlertMenu() : ''}
             <div class="profile-menu">
               <button type="button" class="profile-trigger" data-action="toggle-profile-menu">
                 <span class="navbar-email">${escapeHtml(displayName)}</span>${icon('chevronDown')}
@@ -3179,6 +3220,21 @@ async function handleSaveCompany() {
   }
 }
 
+// Marca a revisão de preços como feita agora, reiniciando a contagem dos
+// 30 dias até o próximo aviso (ver pricesNeedReview).
+async function handleMarkPriceReviewDone() {
+  state.priceReviewAlertOpen = false;
+  try {
+    const now = new Date().toISOString();
+    await db.updateProfile(state.session.user.id, { last_price_review_at: now });
+    state.profile.lastPriceReviewAt = now;
+    showSuccess('Revisão de preços registrada!');
+  } catch (error) {
+    state.statusMessage = `Erro ao registrar revisão: ${error.message}`;
+    render();
+  }
+}
+
 // Busca o endereço pelo CEP (ViaCEP) e preenche logradouro/bairro/cidade/UF
 // automaticamente; número e complemento continuam manuais.
 async function handleCepLookup(cepDigits) {
@@ -3904,6 +3960,13 @@ app.addEventListener('click', (event) => {
       state.adminAlertsOpen = !state.adminAlertsOpen;
       render();
       break;
+    case 'toggle-price-review-alert':
+      state.priceReviewAlertOpen = !state.priceReviewAlertOpen;
+      render();
+      break;
+    case 'mark-price-review-done':
+      handleMarkPriceReviewDone();
+      break;
     case 'toggle-mobile-menu': {
       state.mobileMenuOpen = !state.mobileMenuOpen;
       // Idem: alterna a classe no overlay já montado em vez de um render()
@@ -3983,6 +4046,10 @@ app.addEventListener('click', (event) => {
   }
   if (state.adminAlertsOpen && !event.target.closest('.alerts-menu')) {
     state.adminAlertsOpen = false;
+    render();
+  }
+  if (state.priceReviewAlertOpen && !event.target.closest('.alerts-menu')) {
+    state.priceReviewAlertOpen = false;
     render();
   }
   if (state.openCombobox && !event.target.closest('.combobox')) {

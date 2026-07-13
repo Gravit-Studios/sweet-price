@@ -42,7 +42,11 @@ create table if not exists public.profiles (
   -- cliente. Ficam nulos até serem preenchidos à mão (ver Configurações no
   -- client, que mostra "ativado manualmente" quando ausentes).
   plan_billing_cycle text constraint profiles_plan_billing_cycle_check check (plan_billing_cycle in ('mensal', 'anual')),
-  plan_renews_at timestamptz
+  plan_renews_at timestamptz,
+  -- Recurso do plano Pro: aviso a cada 30 dias pra revisar os preços das
+  -- receitas (ver pricesNeedReview no client). Nulo até a primeira revisão
+  -- marcada; nesse caso o client usa created_at como referência.
+  last_price_review_at timestamptz
 );
 alter table public.profiles enable row level security;
 create policy "Usuário vê o próprio perfil" on public.profiles for select using (auth.uid() = id);
