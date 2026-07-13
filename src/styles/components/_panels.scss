@@ -4,7 +4,11 @@
 // "caixa" visual por dentro do contêiner da página.
 .panel {
   padding: 0;
-  margin-bottom: 20px;
+  margin-bottom: 40px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .section-header {
