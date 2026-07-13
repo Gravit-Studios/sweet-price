@@ -63,6 +63,11 @@
   @include respond-down($bp-tablet) {
     padding: 16px;
     flex-direction: column;
+    // Em coluna, align-items vira o eixo horizontal — "flex-start" (usado
+    // no desktop só pra não esticar a sidebar/conteúdo na vertical) fazia o
+    // conteúdo encolher pra largura do próprio texto em vez de ocupar a
+    // largura toda disponível no mobile.
+    align-items: stretch;
   }
 }
 
