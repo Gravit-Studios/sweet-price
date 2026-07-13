@@ -2422,15 +2422,17 @@ function landingStepsBigSection() {
       <div class="landing-section-inner">
         <p class="eyebrow">Como funciona</p>
         <h2>Do ingrediente à precificação certa</h2>
-        <div class="landing-steps-big-stack">
-          <div class="landing-steps-big-photo reveal">
+      </div>
+      <div class="landing-steps-big-track" style="height: ${LANDING_STEPS_BIG.length * 90}vh">
+        <div class="landing-section-inner landing-steps-big-stack reveal">
+          <div class="landing-steps-big-photo">
             ${LANDING_STEPS_BIG_PHOTOS.map((photo, i) => `
               <div class="landing-steps-big-photo-item ${i === 0 ? 'is-active' : ''}" data-step="${i}">
                 <img src="${photo.src}" alt="${escapeHtml(photo.alt)}" />
               </div>`).join('')}
           </div>
           ${LANDING_STEPS_BIG.map((step, i) => `
-            <div class="landing-steps-big-row reveal" style="--reveal-delay: ${(i * 0.1).toFixed(2)}s">
+            <div class="landing-steps-big-row ${i === 0 ? 'is-active' : ''}" data-step="${i}">
               <span class="landing-steps-big-num">${escapeHtml(step.num)}</span>
               <div class="landing-steps-big-text">
                 <h3>${escapeHtml(step.label)}</h3>
@@ -2920,23 +2922,28 @@ function setupScrollReveal() {
   updateStepsBigPhoto();
 }
 
-// Foto de destaque da seção "Como funciona": desce um pouco e troca de
-// imagem conforme o scroll passa pela faixa de passos — dá movimento sem
-// reintroduzir o scroll pinado (tabs/mockup) que a seção tinha antes.
+// "Como funciona" fica fixa na tela (position: sticky) enquanto a pista alta
+// (.landing-steps-big-track) rola por baixo — a cada trecho da pista, acende
+// o passo (texto + número) e troca a foto correspondente. Mais leve que o
+// scroll pinado antigo (abas/mockup): é só opacidade + crossfade, sem travar
+// a rolagem de verdade nem exigir JS pra "soltar" o pin.
 let stepsPhotoRaf = null;
 function updateStepsBigPhoto() {
-  const stack = app.querySelector('.landing-steps-big-stack');
+  const track = app.querySelector('.landing-steps-big-track');
   const photo = app.querySelector('.landing-steps-big-photo');
-  if (!stack || !photo) return;
-  const rect = stack.getBoundingClientRect();
-  const total = rect.height + window.innerHeight;
-  const progress = Math.min(1, Math.max(0, (window.innerHeight - rect.top) / total));
-  photo.style.transform = `translateY(${(progress * 80).toFixed(1)}px)`;
-  const photoCount = LANDING_STEPS_BIG_PHOTOS.length;
-  const stepIndex = Math.min(photoCount - 1, Math.floor(progress * photoCount));
+  if (!track || !photo) return;
+  const rect = track.getBoundingClientRect();
+  const total = rect.height - window.innerHeight;
+  const progress = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
+  photo.style.transform = `translateY(${(progress * 40).toFixed(1)}px)`;
+  const stepCount = LANDING_STEPS_BIG_PHOTOS.length;
+  const stepIndex = Math.min(stepCount - 1, Math.floor(progress * stepCount));
   if (photo.dataset.activeStep === String(stepIndex)) return;
   photo.dataset.activeStep = String(stepIndex);
   photo.querySelectorAll('[data-step]').forEach((el) => {
+    el.classList.toggle('is-active', Number(el.dataset.step) === stepIndex);
+  });
+  app.querySelectorAll('.landing-steps-big-row[data-step]').forEach((el) => {
     el.classList.toggle('is-active', Number(el.dataset.step) === stepIndex);
   });
 }

@@ -460,25 +460,29 @@
   }
 }
 
-// "Como funciona": lista editorial com números grandes — cada linha entra
-// com fade + leve deslocamento pra cima ao rolar até ela (ver .reveal), sem
-// nenhum mecanismo de scroll pinado/troca de aba.
+// "Como funciona": lista editorial com números grandes. A seção fica fixa
+// na tela (position: sticky) enquanto a "pista" alta por baixo rola — cada
+// passo acende (opacidade) e a foto troca conforme o progresso (ver
+// updateStepsBigPhoto em main.js). Mais leve que o scroll pinado antigo
+// (abas/mockup): é só opacidade/crossfade, o scroll continua livre.
 .landing-steps-big {
   position: relative;
   scroll-margin-top: $navbar-height;
   // Sem .landing-section, essa seção não herdava o padding-top que separa
   // as demais seções — ficava colada na seção escura anterior.
   padding-top: clamp(48px, 7vw, 80px);
-  // A foto desce conforme o scroll (ver updateStepsBigPhoto em main.js) —
-  // sem isso, em algum ponto ela vaza pra baixo da seção e some atrás do
-  // painel escuro seguinte em vez de só ficar fora da vista.
-  overflow: hidden;
   padding-bottom: 24px;
 }
 
-.landing-steps-big-stack {
+.landing-steps-big-track {
   position: relative;
+}
+
+.landing-steps-big-stack {
+  position: sticky;
+  top: calc(#{$navbar-height} + 24px);
   margin-top: 20px;
+  padding-bottom: 40px;
 }
 
 .landing-steps-big-row {
@@ -488,6 +492,12 @@
   padding: 18px 0;
   border-bottom: 1px solid $border;
   text-align: left;
+  opacity: 0.35;
+  transition: opacity 0.4s ease;
+
+  &.is-active {
+    opacity: 1;
+  }
 
   &:last-child {
     border-bottom: 0;
