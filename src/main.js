@@ -981,7 +981,10 @@ function logoUploadField() {
     <label class="photo-dropzone logo-dropzone" data-logo-drop>
       <input type="file" accept="image/*" data-logo-input hidden />
       ${previewSrc
-        ? `<img src="${previewSrc}" alt="Prévia do logotipo" class="photo-preview" />`
+        ? `<div class="photo-preview-wrap">
+            <img src="${previewSrc}" alt="Prévia do logotipo" class="photo-preview" />
+            <span class="photo-preview-edit">${icon('pencil')}</span>
+          </div>`
         : `<div class="photo-dropzone-icon">${icon('box')}</div>`}
       <div class="photo-dropzone-text">
         <strong>${previewSrc ? 'Trocar logotipo' : 'Arraste um logotipo aqui ou clique para enviar'}</strong>

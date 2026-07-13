@@ -31,6 +31,34 @@
   flex-shrink: 0;
 }
 
+// Selo de lápis sobreposto na miniatura, deixando explícito que dá pra
+// clicar ali pra trocar a imagem (em vez de só a área toda ser clicável
+// sem nenhum indício visual em cima da própria foto).
+.photo-preview-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.photo-preview-edit {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: $primary-500;
+  color: $white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid $surface;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 .photo-dropzone-icon {
   width: 120px;
   height: 120px;
