@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260">
+  <defs>
+    <style>
+      .brown{fill:#663209;}
+      .pink{fill:#E85D8E;}
+      .cream{fill:#FFF6F3;}
+      .txt1{font:700 92px 'Poppins',Arial,sans-serif;fill:#663209;}
+      .txt2{font:800 92px 'Poppins',Arial,sans-serif;fill:#E85D8E;}
+    </style>
+    <clipPath id="clipS">
+      <path d="M170,30
+               C110,30 75,60 75,100
+               C75,135 100,155 150,170
+               C200,185 225,198 225,220
+               C225,240 205,250 170,250
+               C130,250 105,235 85,215
+               L60,235
+               C90,265 125,280 175,280
+               C245,280 285,248 285,205
+               C285,165 255,145 195,128
+               C140,112 135,104 135,88
+               C135,70 152,58 178,58
+               C205,58 225,70 245,88
+               L270,58
+               C242,38 215,30 170,30Z"/>
+    </clipPath>
+  </defs>
+
+  <g transform="translate(0,-20)">
+    <path class="brown" d="M170,30
+               C110,30 75,60 75,100
+               C75,135 100,155 150,170
+               C200,185 225,198 225,220
+               C225,240 205,250 170,250
+               C130,250 105,235 85,215
+               L60,235
+               C90,265 125,280 175,280
+               C245,280 285,248 285,205
+               C285,165 255,145 195,128
+               C140,112 135,104 135,88
+               C135,70 152,58 178,58
+               C205,58 225,70 245,88
+               L270,58
+               C242,38 215,30 170,30Z"/>
+    <g clip-path="url(#clipS)">
+      <rect x="100" y="170" width="28" height="55" class="pink"/>
+      <rect x="140" y="145" width="28" height="80" fill="#F6A04D"/>
+      <rect x="180" y="110" width="28" height="115" fill="#49B675"/>
+      <path d="M70,210 C130,190 180,150 235,95" fill="none" stroke="#FFF6F3" stroke-width="10"/>
+    </g>
+    <path d="M210 28 C232 28 242 38 242 54 C242 64 236 71 230 76 C226 67 220 59 210 55 Z" fill="#663209"/>
+    <path d="M226 54 C236 60 236 70 228 78" stroke="#663209" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <text x="320" y="110" class="txt1">Doce</text>
+  <text x="320" y="195" class="txt2">Preço</text>
+</svg>

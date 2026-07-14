@@ -25,11 +25,6 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: $primary-600;
-  font-family: $font-heading;
-  font-weight: $fw-black;
-  font-size: 1.05rem;
   flex-shrink: 0;
   background: none;
   border: 0;
@@ -42,12 +37,10 @@
   }
 }
 
-.brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: $radius-sm;
+.brand-logo {
+  height: 44px;
+  width: auto;
   flex-shrink: 0;
-  object-fit: contain;
 }
 
 .nav-list {
