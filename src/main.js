@@ -5,6 +5,13 @@ import { compressImageToWebp } from './imageCompression.js';
 import { lookupCep } from './cep.js';
 import * as db from './db.js';
 
+// Verificação de captcha no cadastro (evita contas automatizadas em massa) —
+// a validação de verdade acontece no lado do Supabase (Authentication >
+// Attack protection), que precisa ter a secret key correspondente
+// configurada lá; aqui só renderizamos o widget e mandamos o token junto do
+// signUp.
+const RECAPTCHA_SITE_KEY = '6LdyZlItAAAAAK3jDCs3bvwYVjhFexmQvhNa0ASc';
+
 // ---------------- Helpers de estado / formatação ----------------
 
 function newIngredient(overrides = {}) {
@@ -2689,7 +2696,8 @@ function authHtml() {
               <label class="consent-field">
                 <input name="consent" type="checkbox" required />
                 <span>Concordo com o tratamento dos meus dados pessoais para uso do app, conforme a LGPD.</span>
-              </label>` : ''}
+              </label>
+              <div class="g-recaptcha" data-sitekey="${RECAPTCHA_SITE_KEY}"></div>` : ''}
             ${state.authError ? `<p class="auth-error">${escapeHtml(state.authError)}</p>` : ''}
             <button type="submit" class="auth-submit" ${state.authLoading ? 'disabled' : ''}>
               <span>${state.authLoading ? 'Aguarde...' : isSignUp ? 'Criar conta' : 'Entrar'}</span>${icon('arrow')}
@@ -2898,6 +2906,28 @@ function render() {
   restoreFocus(restore);
   setupScrollReveal();
   hydrateInlineSvgs();
+  renderRecaptchaWidgets();
+}
+
+// O script do reCAPTCHA só auto-renderiza [.g-recaptcha] presentes no DOM
+// quando a página carrega — como o render() troca o innerHTML todo, um
+// widget inserido depois (ex.: ao trocar de "Entrar" pra "Criar conta")
+// nunca apareceria sem chamar grecaptcha.render() manualmente aqui.
+function renderRecaptchaWidgets() {
+  const containers = app.querySelectorAll('.g-recaptcha:not([data-rendered])');
+  if (!containers.length) return;
+  const tryRender = () => {
+    if (typeof grecaptcha === 'undefined' || !grecaptcha.render) {
+      setTimeout(tryRender, 200);
+      return;
+    }
+    containers.forEach((el) => {
+      if (el.dataset.rendered) return;
+      el.dataset.rendered = 'true';
+      grecaptcha.render(el, { sitekey: RECAPTCHA_SITE_KEY });
+    });
+  };
+  tryRender();
 }
 
 // Busca e injeta o markup de cada [data-inline-svg] ainda vazio (ver
@@ -3007,19 +3037,39 @@ async function handleAuthSubmit(form) {
   const fullName = formData.get('fullName');
   const companyName = formData.get('companyName');
 
-  state.authLoading = true;
-  state.authError = '';
-  render();
-
-  try {
-    if (state.authMode === 'signup') {
-      await signUp(email, password, fullName, companyName);
+  if (state.authMode === 'signup') {
+    const captchaToken = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
+    if (!captchaToken) {
+      state.authError = 'Confirme que você não é um robô antes de continuar.';
+      render();
+      return;
+    }
+    state.authLoading = true;
+    state.authError = '';
+    render();
+    try {
+      await signUp(email, password, fullName, companyName, captchaToken);
       form.reset();
       state.authLoading = false;
       navigate('#/entrar');
       showSuccess('Conta criada! Verifique seu e-mail para confirmar o acesso e aguarde a aprovação de um administrador para começar a usar o app.', 3200);
       return;
+    } catch (error) {
+      state.authError = error.message;
+    } finally {
+      state.authLoading = false;
+      // Token de captcha é de uso único — sem resetar, uma segunda tentativa
+      // (ex.: após erro de e-mail já cadastrado) reenviaria o mesmo token.
+      if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
+      render();
     }
+    return;
+  }
+
+  state.authLoading = true;
+  state.authError = '';
+  render();
+  try {
     await signIn(email, password);
   } catch (error) {
     state.authError = error.message;

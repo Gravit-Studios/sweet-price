@@ -1,10 +1,10 @@
 import { supabase } from './supabaseClient.js';
 
-export async function signUp(email, password, fullName, companyName) {
+export async function signUp(email, password, fullName, companyName, captchaToken) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName, company_name: companyName } },
+    options: { data: { full_name: fullName, company_name: companyName }, captchaToken },
   });
   if (error) throw error;
   return data;
