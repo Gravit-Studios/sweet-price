@@ -664,7 +664,7 @@ function avatarColorFor(name) {
 }
 
 function banner(title, subtitle) {
-  return `<div class="banner"><img src="/assets/bg-login.webp" alt="" class="banner-photo" /><div class="banner-overlay"></div><div class="banner-inner"><div class="banner-content"><p class="eyebrow">Doce Preço</p><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div></div></div>`;
+  return `<div class="banner"><img src="/assets/background/bg-login.webp" alt="" class="banner-photo" /><div class="banner-overlay"></div><div class="banner-inner"><div class="banner-content"><p class="eyebrow">Doce Preço</p><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div></div></div>`;
 }
 
 // Cabeçalho padrão com foto pra cada página interna (Receitas, Ingredientes,
@@ -673,7 +673,7 @@ function banner(title, subtitle) {
 // section-header simples.
 function pageBanner(eyebrow, title, actionsHtml = '') {
   return `<div class="page-banner">
-    <img src="/assets/pexels-anntarazevich-6035994.webp" alt="" class="page-banner-photo" />
+    <img src="/assets/img/pexels-anntarazevich-6035994.webp" alt="" class="page-banner-photo" />
     <div class="page-banner-overlay"></div>
     <div class="page-banner-inner">
       <div><p class="eyebrow">${escapeHtml(eyebrow)}</p><h2>${escapeHtml(title)}</h2></div>
@@ -698,14 +698,14 @@ function inlineSvgPlaceholder(tag, className, src) {
 function loadingMsg() {
   return `
     <div class="loading-state" role="status" aria-label="Carregando">
-      ${inlineSvgPlaceholder('span', 'loading-whisk', '/assets/cooking-loader.svg')}
+      ${inlineSvgPlaceholder('span', 'loading-whisk', '/assets/icons/cooking-loader.svg')}
       <span class="muted">Carregando...</span>
     </div>`;
 }
 
 function emptyState(message, showCta) {
   return `<div class="empty-state">
-    ${inlineSvgPlaceholder('div', 'empty-state-illustration', '/assets/cooking-illustration.svg')}
+    ${inlineSvgPlaceholder('div', 'empty-state-illustration', '/assets/icons/cooking-illustration.svg')}
     <p>${escapeHtml(message)}</p>${showCta ? '<button type="button" data-action="start-wizard">Criar receita</button>' : ''}
   </div>`;
 }
@@ -1414,9 +1414,9 @@ function isHttpUrl(value) {
 // configuração (Empresa) quanto nos atalhos da home. Cor + marca dão um
 // selo visual reconhecível sem depender de logos externos.
 const DELIVERY_BRANDS = [
-  { key: 'ifoodUrl', label: 'iFood', logo: '/assets/logo-ifood.png' },
-  { key: 'link99Url', label: '99', logo: '/assets/logo-99-food.png' },
-  { key: 'keetaUrl', label: 'Keeta', logo: '/assets/logo-keeta.png' },
+  { key: 'ifoodUrl', label: 'iFood', logo: '/assets/parceiros/logo-ifood.png' },
+  { key: 'link99Url', label: '99', logo: '/assets/parceiros/logo-99-food.png' },
+  { key: 'keetaUrl', label: 'Keeta', logo: '/assets/parceiros/logo-keeta.png' },
 ];
 
 function deliveryBadge(brand, extraClass = '') {
@@ -2394,9 +2394,9 @@ const LANDING_STEPS_BIG = [
 // updateStepsBigPhoto), pra dar mais movimento à seção sem reintroduzir o
 // scroll pinado inteiro (abas/mockup) que a seção tinha antes.
 const LANDING_STEPS_BIG_PHOTOS = [
-  { src: '/assets/pexels-anntarazevich-6035994.webp', alt: 'Confeiteira preparando uma receita' },
-  { src: '/assets/pexels-anntarazevich-6036020.webp', alt: 'Calda de chocolate sendo derramada' },
-  { src: '/assets/pexels-amar-9329437.webp', alt: 'Doces prontos para servir' },
+  { src: '/assets/img/pexels-anntarazevich-6035994.webp', alt: 'Confeiteira preparando uma receita' },
+  { src: '/assets/img/pexels-anntarazevich-6036020.webp', alt: 'Calda de chocolate sendo derramada' },
+  { src: '/assets/img/pexels-amar-9329437.webp', alt: 'Doces prontos para servir' },
 ];
 
 // O teste grátis (7 dias) já dá acesso nível Básico (ver planStatus) — por
@@ -2524,7 +2524,7 @@ function landingStepsBigSection() {
 function landingHeroV2() {
   return `
     <section class="landing-hero-v2">
-      <img src="/assets/bg-banner.webp" alt="" class="landing-hero-v2-photo" />
+      <img src="/assets/background/bg-banner-02.webp" alt="" class="landing-hero-v2-photo" />
       <div class="landing-section-inner landing-hero-v2-inner">
         <div class="landing-hero-v2-copy">
           <p class="eyebrow-pill">Facilite a gestão da sua confeitaria</p>
@@ -2564,13 +2564,13 @@ function landingHeroV2() {
 // usada, seção "Endless Workout Options").
 function landingFeaturePanel() {
   const cards = [
-    { icon: 'box', title: 'Ingredientes ilimitados', text: 'Cadastre quantos insumos e embalagens usar.', photo: '/assets/pexels-anntarazevich-6035994.webp' },
-    { icon: 'trending', title: 'Cálculo automático', text: 'Custo e preço sugerido recalculados a cada alteração.', photo: '/assets/pexels-anntarazevich-6036020.webp' },
-    { icon: 'storefront', title: 'Vitrine sincronizada', text: 'O que você publica aparece na hora pro seu cliente.', photo: '/assets/pexels-amar-9329437.webp' },
+    { icon: 'box', title: 'Ingredientes ilimitados', text: 'Cadastre quantos insumos e embalagens usar.', photo: '/assets/img/pexels-anntarazevich-6035994.webp' },
+    { icon: 'trending', title: 'Cálculo automático', text: 'Custo e preço sugerido recalculados a cada alteração.', photo: '/assets/img/pexels-anntarazevich-6036020.webp' },
+    { icon: 'storefront', title: 'Vitrine sincronizada', text: 'O que você publica aparece na hora pro seu cliente.', photo: '/assets/img/pexels-amar-9329437.webp' },
   ];
   return `
     <section class="landing-feature-panel reveal" id="praticidade">
-      <img src="/assets/pexels-anntarazevich-6036020.webp" alt="" class="landing-feature-photo" />
+      <img src="/assets/img/pexels-anntarazevich-6036020.webp" alt="" class="landing-feature-photo" />
       <div class="landing-feature-overlay"></div>
       <div class="landing-section-inner landing-feature-inner">
         <p class="eyebrow-pill landing-feature-eyebrow">Praticidade todo dia</p>
@@ -2659,7 +2659,7 @@ function landingHtml() {
       </section>
 
       <section class="landing-cta">
-        <img src="/assets/pexels-amar-9329437.webp" alt="" class="landing-cta-photo" />
+        <img src="/assets/img/pexels-amar-9329437.webp" alt="" class="landing-cta-photo" />
         <div class="landing-cta-overlay"></div>
         <div class="landing-cta-marquee" aria-hidden="true">
           <div class="landing-cta-marquee-track">
@@ -2755,7 +2755,7 @@ function authHtml() {
         </div>
       </div>
       <div class="auth-visual">
-        <img src="/assets/pexels-anntarazevich-6036020.webp" alt="" class="auth-visual-photo" />
+        <img src="/assets/img/pexels-anntarazevich-6036020.webp" alt="" class="auth-visual-photo" />
         <div class="auth-visual-overlay"></div>
       </div>
     </div>
@@ -2809,9 +2809,9 @@ async function ensurePublicMenuLoaded(slug) {
 }
 
 const PUBLIC_DELIVERY_BRANDS = [
-  { key: 'ifood_url', label: 'iFood', logo: '/assets/logo-ifood.png' },
-  { key: 'link_99_url', label: '99', logo: '/assets/logo-99-food.png' },
-  { key: 'keeta_url', label: 'Keeta', logo: '/assets/logo-keeta.png' },
+  { key: 'ifood_url', label: 'iFood', logo: '/assets/parceiros/logo-ifood.png' },
+  { key: 'link_99_url', label: '99', logo: '/assets/parceiros/logo-99-food.png' },
+  { key: 'keeta_url', label: 'Keeta', logo: '/assets/parceiros/logo-keeta.png' },
 ];
 
 // Categorias na ordem em que aparecem pela primeira vez na lista de
@@ -2880,10 +2880,10 @@ function publicMenuFooter(company) {
 function publicMenuHtml() {
   const slug = state.route.param;
   if (!slug || state.publicMenu.slug !== slug) {
-    return `<div class="menu-loading">${inlineSvgPlaceholder('span', 'loading-whisk', '/assets/cooking-loader.svg')}</div>`;
+    return `<div class="menu-loading">${inlineSvgPlaceholder('span', 'loading-whisk', '/assets/icons/cooking-loader.svg')}</div>`;
   }
   if (state.publicMenu.loading) {
-    return `<div class="menu-loading">${inlineSvgPlaceholder('span', 'loading-whisk', '/assets/cooking-loader.svg')}</div>`;
+    return `<div class="menu-loading">${inlineSvgPlaceholder('span', 'loading-whisk', '/assets/icons/cooking-loader.svg')}</div>`;
   }
   if (!state.publicMenu.company) {
     return `<div class="menu-empty-page"><h1>Cardápio não encontrado</h1><p>Verifique se o link está correto.</p></div>`;
