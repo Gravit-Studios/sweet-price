@@ -2115,7 +2115,7 @@ function mobileDrawer(displayName) {
     <div class="mobile-drawer-overlay ${state.mobileMenuOpen ? 'open' : ''}">
       <nav class="mobile-drawer">
         <div class="mobile-drawer-header">
-          <span class="brand"><span class="brand-mark"></span> Doce Preço</span>
+          <span class="brand"><img src="/assets/logotipo/SweetPrice-Simbolo.svg" alt="" class="brand-mark" /> Doce Preço</span>
           <div class="mobile-drawer-header-actions">
             ${pricesNeedReview(state.profile) ? priceReviewAlertMenu() : ''}
             <button type="button" class="icon-btn ghost" data-action="toggle-mobile-menu" aria-label="Fechar menu">${icon('close')}</button>
@@ -2148,7 +2148,7 @@ function pendingApprovalHtml(displayName) {
       <header class="navbar">
         <div class="navbar-inner">
           <button type="button" class="brand" data-action="goto" data-route="inicio">
-            <span class="brand-mark"></span> Doce Preço
+            <img src="/assets/logotipo/SweetPrice-Simbolo.svg" alt="" class="brand-mark" /> Doce Preço
           </button>
           <div class="navbar-user">
             <span class="navbar-email">${escapeHtml(displayName)}</span>
@@ -2179,7 +2179,7 @@ function trialExpiredHtml(displayName) {
       <header class="navbar">
         <div class="navbar-inner">
           <button type="button" class="brand" data-action="goto" data-route="inicio">
-            <span class="brand-mark"></span> Doce Preço
+            <img src="/assets/logotipo/SweetPrice-Simbolo.svg" alt="" class="brand-mark" /> Doce Preço
           </button>
           <div class="navbar-user">
             <span class="navbar-email">${escapeHtml(displayName)}</span>
@@ -2273,7 +2273,7 @@ function shellHtml() {
       <header class="navbar">
         <div class="navbar-inner">
           <button type="button" class="brand" data-action="goto" data-route="inicio">
-            <span class="brand-mark"></span> Doce Preço
+            <img src="/assets/logotipo/SweetPrice-Simbolo.svg" alt="" class="brand-mark" /> Doce Preço
           </button>
           ${isAdmin ? '' : `
           <ul class="nav-list">
@@ -2456,7 +2456,7 @@ function landingNav() {
     <header class="navbar landing-nav">
       <div class="navbar-inner">
         <button type="button" class="brand" data-action="goto" data-route="inicio">
-          <span class="brand-mark"></span> Doce Preço
+          <img src="/assets/logotipo/SweetPrice-Simbolo.svg" alt="" class="brand-mark" /> Doce Preço
         </button>
         <ul class="landing-nav-links">
           <li><a href="#beneficios">Benefícios</a></li>
@@ -2728,7 +2728,7 @@ function authHtml() {
   return `
     <div class="auth-page">
       <div class="auth-form-side">
-        <button type="button" class="auth-brand" data-action="goto" data-route="inicio"><span class="brand-mark"></span> Doce Preço</button>
+        <button type="button" class="auth-brand" data-action="goto" data-route="inicio"><img src="/assets/logotipo/SweetPrice-Simbolo.svg" alt="" class="brand-mark" /> Doce Preço</button>
         <div class="auth-form-inner">
           <p class="eyebrow">${isSignUp ? 'Comece agora' : 'Bem-vindo de volta'}</p>
           <h1 class="auth-title">${isSignUp ? 'Crie sua conta' : 'Acesse sua conta'}</h1>
