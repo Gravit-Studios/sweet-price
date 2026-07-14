@@ -209,8 +209,8 @@
 }
 
 .landing-hero-floater-1 {
-  top: -12px;
-  left: -12px;
+  top: -36px;
+  left: -36px;
   animation-delay: 0s;
 
   @include respond-down($bp-tablet) {
@@ -220,8 +220,8 @@
 }
 
 .landing-hero-floater-2 {
-  top: -20px;
-  right: -16px;
+  top: -44px;
+  right: -40px;
   animation-delay: 0.6s;
 
   @include respond-down($bp-tablet) {
@@ -231,8 +231,8 @@
 }
 
 .landing-hero-floater-3 {
-  bottom: -8px;
-  left: 0;
+  bottom: -28px;
+  left: -24px;
   animation-delay: 1.2s;
 
   @include respond-down($bp-tablet) {
