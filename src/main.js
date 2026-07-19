@@ -3335,9 +3335,16 @@ async function handleWizardSave() {
     return;
   }
   try {
-    const photoUrl = ed.photoFile
-      ? await db.uploadProductPhoto(state.session.user.id, ed.photoFile)
-      : null;
+    const photoCount = state.savedProducts.filter((p) => p.photo_url).length;
+    let photoUrl = null;
+    let photoBlocked = false;
+    if (ed.photoFile) {
+      if (canUse(state.profile.plan, 'photos', photoCount)) {
+        photoUrl = await db.uploadProductPhoto(state.session.user.id, ed.photoFile);
+      } else {
+        photoBlocked = true;
+      }
+    }
     const saved = await db.saveProduct(
       state.session.user.id,
       null,
@@ -3349,6 +3356,9 @@ async function handleWizardSave() {
       ed.ingredients.filter((i) => i.name.trim() && !i.draft),
     );
     await loadUserData();
+    if (photoBlocked) {
+      state.statusMessage = `Receita criada sem foto: você atingiu o limite de ${limitFor(state.profile.plan, 'photos')} fotos do plano Gratuito. Faça upgrade para o Controle para anexar fotos ilimitadas.`;
+    }
     showSuccess('Receita criada com sucesso!');
     navigate(`#/produto/${saved.id}`);
     ensureDetailLoaded(saved.id);
@@ -3371,9 +3381,20 @@ async function handleSaveDetail() {
     return;
   }
   try {
-    const photoUrl = ed.photoFile
-      ? await db.uploadProductPhoto(state.session.user.id, ed.photoFile)
-      : ed.photoUrl || null;
+    // Só conta como uma foto nova pro limite se a receita ainda não tinha
+    // foto — trocar a foto de uma receita que já tem uma não aumenta a
+    // contagem (ver planLimits.js).
+    const isNewPhoto = Boolean(ed.photoFile) && !ed.photoUrl;
+    const photoCount = state.savedProducts.filter((p) => p.photo_url).length;
+    let photoUrl = ed.photoUrl || null;
+    let photoBlocked = false;
+    if (ed.photoFile) {
+      if (!isNewPhoto || canUse(state.profile.plan, 'photos', photoCount)) {
+        photoUrl = await db.uploadProductPhoto(state.session.user.id, ed.photoFile);
+      } else {
+        photoBlocked = true;
+      }
+    }
     await db.saveProduct(
       state.session.user.id,
       ed.productId,
@@ -3390,6 +3411,9 @@ async function handleSaveDetail() {
     );
     ed.photoFile = null;
     state.detailSnapshot = detailSnapshotOf(ed);
+    if (photoBlocked) {
+      state.statusMessage = `Alterações salvas sem a nova foto: você atingiu o limite de ${limitFor(state.profile.plan, 'photos')} fotos do plano Gratuito. Faça upgrade para o Controle para anexar fotos ilimitadas.`;
+    }
     showSuccess('Alterações salvas.');
     await loadUserData();
   } catch (error) {
@@ -3523,6 +3547,11 @@ function openConfirmDeleteExpense(id, name) {
 }
 
 async function handleAddExpenseSubmit(form) {
+  if (!canUse(state.profile.plan, 'categories', state.expenseCategories.length)) {
+    state.activeModal.error = `Você atingiu o limite de ${limitFor(state.profile.plan, 'categories')} categorias de despesa do plano Gratuito. Faça upgrade para o Controle para cadastrar categorias ilimitadas.`;
+    render();
+    return;
+  }
   const formData = new FormData(form);
   state.activeModal.loading = true;
   state.activeModal.error = '';
