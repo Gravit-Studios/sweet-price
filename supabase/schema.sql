@@ -3,6 +3,9 @@
 -- (Dashboard -> SQL Editor -> New query -> colar -> Run)
 
 create extension if not exists "pgcrypto";
+-- unaccent: usado na geração do slug do cardápio público (handle_new_user),
+-- pra transliterar "í", "ç", "ã" etc. em vez de tratá-los como pontuação.
+create extension if not exists "unaccent";
 
 -- =========================================================
 -- profiles — criado automaticamente no cadastro
@@ -114,7 +117,7 @@ begin
     new.raw_user_meta_data ->> 'full_name',
     new.raw_user_meta_data ->> 'company_name',
     lower(regexp_replace(
-      coalesce(nullif(new.raw_user_meta_data ->> 'company_name', ''), split_part(new.email, '@', 1)),
+      public.unaccent(coalesce(nullif(new.raw_user_meta_data ->> 'company_name', ''), split_part(new.email, '@', 1))),
       '[^a-zA-Z0-9]+', '-', 'g'
     )) || '-' || substr(new.id::text, 1, 6)
   );
