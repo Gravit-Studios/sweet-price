@@ -2789,7 +2789,7 @@ function landingStepsBigSection() {
       <div class="landing-steps-big-track" style="height: calc(${LANDING_STEPS_BIG.length * 90}vh + 100vh)">
         <div class="landing-steps-big-sticky">
           <div class="landing-section-inner landing-steps-big-stack">
-            <p class="eyebrow">Como funciona</p>
+            <p class="eyebrow-pill">Como funciona</p>
             <h2>Do ingrediente à precificação certa</h2>
             <div class="landing-steps-big-photo">
               ${LANDING_STEPS_BIG_PHOTOS.map((photo, i) => `
@@ -2907,7 +2907,7 @@ function landingHtml() {
 
       <section class="landing-section landing-section-dark" id="beneficios">
         <div class="landing-section-inner">
-          <p class="eyebrow">Benefícios</p>
+          <p class="eyebrow-pill">Benefícios</p>
           <h2>Tudo que sua confeitaria precisa pra precificar certo</h2>
           <div class="landing-benefits-grid">
             ${LANDING_BENEFITS.map((b, index) => `
