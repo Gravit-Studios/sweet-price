@@ -2385,7 +2385,7 @@ function mobileDrawer(displayName) {
     <div class="mobile-drawer-overlay ${state.mobileMenuOpen ? 'open' : ''}">
       <nav class="mobile-drawer">
         <div class="mobile-drawer-header">
-          <span class="brand"><img src="/assets/logotipo/SVG/logotipo-doce-preco.svg" alt="SweetHub" class="brand-logo" /></span>
+          <span class="brand"><img src="/assets/logotipo/SVG/logotipo-original.png" alt="SweetHub" class="brand-logo" /></span>
           <div class="mobile-drawer-header-actions">
             ${pricesNeedReview(state.profile) ? priceReviewAlertMenu() : ''}
             <button type="button" class="icon-btn ghost" data-action="toggle-mobile-menu" aria-label="Fechar menu">${icon('close')}</button>
@@ -2418,7 +2418,7 @@ function pendingApprovalHtml(displayName) {
       <header class="navbar">
         <div class="navbar-inner">
           <button type="button" class="brand" data-action="goto" data-route="inicio">
-            <img src="/assets/logotipo/SVG/logotipo-doce-preco.svg" alt="SweetHub" class="brand-logo" />
+            <img src="/assets/logotipo/SVG/logotipo-original.png" alt="SweetHub" class="brand-logo" />
           </button>
           <div class="navbar-user">
             <span class="navbar-email">${escapeHtml(displayName)}</span>
@@ -2450,7 +2450,7 @@ function paymentPendingHtml(displayName, profile) {
       <header class="navbar">
         <div class="navbar-inner">
           <button type="button" class="brand" data-action="goto" data-route="inicio">
-            <img src="/assets/logotipo/SVG/logotipo-doce-preco.svg" alt="SweetHub" class="brand-logo" />
+            <img src="/assets/logotipo/SVG/logotipo-original.png" alt="SweetHub" class="brand-logo" />
           </button>
           <div class="navbar-user">
             <span class="navbar-email">${escapeHtml(displayName)}</span>
@@ -2547,7 +2547,7 @@ function shellHtml() {
       <header class="navbar">
         <div class="navbar-inner">
           <button type="button" class="brand" data-action="goto" data-route="inicio">
-            <img src="/assets/logotipo/SVG/logotipo-doce-preco.svg" alt="SweetHub" class="brand-logo" />
+            <img src="/assets/logotipo/SVG/logotipo-original.png" alt="SweetHub" class="brand-logo" />
           </button>
           ${isAdmin ? '' : `
           <ul class="nav-list">
@@ -2751,7 +2751,7 @@ function landingNav() {
     <header class="navbar landing-nav">
       <div class="navbar-inner">
         <button type="button" class="brand" data-action="landing-home">
-          <img src="/assets/logotipo/SVG/logotipo-doce-preco.svg" alt="SweetHub" class="brand-logo" />
+          <img src="/assets/logotipo/SVG/logotipo-original.png" alt="SweetHub" class="brand-logo" />
         </button>
         <ul class="landing-nav-links">
           <li><a href="#beneficios">Benefícios</a></li>
@@ -3034,7 +3034,7 @@ function authHtml() {
   return `
     <div class="auth-page">
       <div class="auth-form-side">
-        <button type="button" class="auth-brand" data-action="goto" data-route="inicio"><img src="/assets/logotipo/SVG/logotipo-doce-preco.svg" alt="SweetHub" class="brand-logo" /></button>
+        <button type="button" class="auth-brand" data-action="goto" data-route="inicio"><img src="/assets/logotipo/SVG/logotipo-original.png" alt="SweetHub" class="brand-logo" /></button>
         <div class="auth-form-inner">
           <div class="auth-tabs" role="tablist">
             <button type="button" role="tab" aria-selected="${!isSignUp}" class="auth-tab ${!isSignUp ? 'is-active' : ''}" data-action="auth-tab" data-mode="signin">Entrar</button>
