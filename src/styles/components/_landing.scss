@@ -491,6 +491,12 @@
   gap: 0;
 
   @include respond-down($bp-tablet) {
+    flex-wrap: wrap;
+  }
+
+  // Só empilha em telas de celular estreitas — tablet tem espaço de sobra
+  // pra manter os 3 destaques lado a lado.
+  @media (max-width: 560px) {
     flex-direction: column;
     gap: 14px;
   }
@@ -508,12 +514,16 @@
   &:not(:last-child) {
     border-right: 1px solid rgba(var(--white-rgb), 0.2);
 
-    @include respond-down($bp-tablet) {
+    @media (max-width: 560px) {
       border-right: 0;
     }
   }
 
   @include respond-down($bp-tablet) {
+    padding: 0 16px;
+  }
+
+  @media (max-width: 560px) {
     justify-content: center;
     padding: 0;
   }
