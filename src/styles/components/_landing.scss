@@ -595,6 +595,10 @@
 
   &.is-active {
     opacity: 1;
+
+    .landing-steps-big-text h3 {
+      color: $primary-600;
+    }
   }
 
   &:last-child {
@@ -608,6 +612,13 @@
     // Sem a foto (nem o pin) pra justificar o passo "apagado" até o scroll
     // chegar nele, os passos ficam todos legíveis de cara.
     opacity: 1;
+
+    // Sem o pin, o progresso do scroll fica travado em 0 (ver
+    // updateStepsBigPhoto em main.js) — sem essa exceção, só o primeiro
+    // passo ficaria colorido pra sempre, os outros nunca.
+    .landing-steps-big-text h3 {
+      color: $ink-900;
+    }
   }
 }
 
@@ -632,6 +643,7 @@
     font-size: clamp(1.4rem, 3vw, 2.1rem);
     margin: 0 0 8px;
     color: $ink-900;
+    transition: color 0.4s ease;
   }
 
   p {
