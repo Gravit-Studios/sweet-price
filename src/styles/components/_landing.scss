@@ -83,11 +83,11 @@
   letter-spacing: 0.02em;
 }
 
-// Metade do título em tom mais claro/acinzentado, o resto no peso/cor
-// normal — mesmo efeito de "duas cores" da referência (ex.: "The Fitness
-// Journey Starts Here").
+// Metade do título na cor secundária da marca, o resto no peso/cor normal —
+// mesmo efeito de "duas cores" da referência (ex.: "The Fitness Journey
+// Starts Here").
 .muted-tone {
-  color: $ink-400;
+  color: $secondary-500;
 }
 
 // Hero novo: foto full-bleed (degradê já vem embutido na imagem, escurecendo
