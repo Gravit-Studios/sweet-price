@@ -1593,22 +1593,11 @@ function deliveryBadge(brand, extraClass = '') {
   return `<img class="delivery-badge ${extraClass}" src="${brand.logo}" alt="${escapeHtml(brand.label)}" />`;
 }
 
-function deliveryShortcuts() {
-  const links = DELIVERY_BRANDS
-    .map((brand) => ({ brand, url: state.company[brand.key] }))
-    .filter((l) => isHttpUrl(l.url));
-  if (!links.length) return '';
-  return `<div class="delivery-shortcuts">
-    ${links.map((l) => `<a class="delivery-shortcut" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${deliveryBadge(l.brand, 'delivery-badge-sm')}<span>${escapeHtml(l.brand.label)}</span></a>`).join('')}
-  </div>`;
-}
-
 function renderDashboard() {
   const ultimoProduto = state.savedProducts[0];
 
   return `
     ${banner('Calculadora de precificação para confeitaria', 'Acompanhe suas receitas, ingredientes e o histórico de preços em um só lugar.')}
-    ${deliveryShortcuts()}
     ${statusBox()}
     <div class="highlight-grid">
       <div class="highlight-card">
