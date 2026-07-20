@@ -895,7 +895,8 @@
 .landing-final-cta {
   position: relative;
   overflow: hidden;
-  margin-top: -80px;
+  margin-left: -80px;
+  margin-right: -80px;
   padding: clamp(64px, 9vw, 96px) 0 clamp(48px, 6vw, 64px);
   text-align: center;
   border-radius: 50% 50% 0 0 / clamp(120px, 22vw, 320px) clamp(120px, 22vw, 320px) 0 0;
