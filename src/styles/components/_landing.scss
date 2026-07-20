@@ -702,7 +702,10 @@
 }
 
 .landing-pricing-grid {
-  margin-top: 12px;
+  // O cartão em destaque tem um badge ("Mais popular") que flutua -12px
+  // acima da própria borda (ver .landing-plan-badge) — sem uma margem maior
+  // aqui, ele ficava colado (ou até sobrepondo) o toggle Mensal/Anual.
+  margin-top: 36px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 320px));
   justify-content: center;
