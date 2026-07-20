@@ -540,6 +540,14 @@
 
 .landing-steps-big-track {
   position: relative;
+
+  // A altura inline (ver landingStepsBigSection em main.js) só existe pra
+  // criar distância de scroll pro efeito de pin+crossfade da foto — sem a
+  // foto (escondida no tablet/mobile, ver .landing-steps-big-photo abaixo),
+  // sobra só uma trava de scroll longa e sem efeito visual nenhum por trás.
+  @include respond-down($bp-tablet) {
+    height: auto !important;
+  }
 }
 
 // Painel do tamanho da tela (abaixo do navbar) que gruda no topo enquanto a
@@ -552,6 +560,11 @@
   height: calc(100vh - #{$navbar-height});
   display: flex;
   align-items: center;
+
+  @include respond-down($bp-tablet) {
+    position: static;
+    height: auto;
+  }
 }
 
 // Sem position:relative aqui, a foto (position:absolute; right:0) ancorava
@@ -593,6 +606,9 @@
     flex-direction: column;
     gap: 6px;
     padding: 20px 0;
+    // Sem a foto (nem o pin) pra justificar o passo "apagado" até o scroll
+    // chegar nele, os passos ficam todos legíveis de cara.
+    opacity: 1;
   }
 }
 
