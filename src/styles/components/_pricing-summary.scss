@@ -128,7 +128,7 @@
 
   &.tier-featured {
     border-color: $primary-500;
-    background: rgba($primary-500, 0.04);
+    background: rgba(var(--primary-500-rgb), 0.04);
   }
 }
 
@@ -150,7 +150,7 @@
   font-size: 0.68rem;
   font-weight: $fw-bold;
   color: $primary-600;
-  background: rgba($primary-500, 0.12);
+  background: rgba(var(--primary-500-rgb), 0.12);
   padding: 3px 9px;
   border-radius: 999px;
   text-transform: uppercase;

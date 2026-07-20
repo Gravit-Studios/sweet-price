@@ -95,12 +95,12 @@
 .auth-visual-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba($ink-900, 0.22) 0%, rgba($ink-900, 0) 35%, rgba($ink-900, 0) 65%, rgba($ink-900, 0.3) 100%);
+  background: linear-gradient(180deg, rgba(var(--ink-900-rgb), 0.22) 0%, rgba(var(--ink-900-rgb), 0) 35%, rgba(var(--ink-900-rgb), 0) 65%, rgba(var(--ink-900-rgb), 0.3) 100%);
 
   // No mobile a foto é o fundo inteiro atrás do cartão de login — um
   // escurecido uniforme ajuda o cartão branco a se destacar por cima.
   @include respond-down($bp-tablet) {
-    background: rgba($ink-900, 0.35);
+    background: rgba(var(--ink-900-rgb), 0.35);
   }
 }
 

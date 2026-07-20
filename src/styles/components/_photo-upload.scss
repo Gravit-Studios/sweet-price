@@ -21,7 +21,7 @@
   &:hover,
   &.is-dragover {
     border-color: $primary-400;
-    background: rgba($primary-500, 0.04);
+    background: rgba(var(--primary-500-rgb), 0.04);
   }
 
   &.has-preview {

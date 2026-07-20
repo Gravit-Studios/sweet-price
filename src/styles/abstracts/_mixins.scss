@@ -7,9 +7,13 @@
   }
 }
 
-@mixin focus-ring($color: c.$secondary-600) {
-  border-color: $color;
-  box-shadow: 0 0 0 4px rgba($color, 0.16);
+// $name é o sufixo da custom property (ver mapa $colors em _colors.scss),
+// não a variável Sass — precisa do nome como string pra montar a versão
+// "-rgb" usada na sombra (rgba($cor, ..) não aceita mais um var() como
+// primeiro argumento, já que a cor deixou de ser um valor Sass literal).
+@mixin focus-ring($name: 'secondary-600') {
+  border-color: var(--#{$name});
+  box-shadow: 0 0 0 4px rgba(var(--#{$name}-rgb), 0.16);
 }
 
 @mixin card-surface($radius: t.$radius-md) {

@@ -54,7 +54,7 @@
 
 .highlight-icon-star { background: $primary-100; color: $primary-600; }
 
-.highlight-icon-cta { background: rgba($white, 0.18); color: $white; }
+.highlight-icon-cta { background: rgba(var(--white-rgb), 0.18); color: $white; }
 
 .highlight-card-cta {
   background: linear-gradient(135deg, $primary-600, $secondary-600);

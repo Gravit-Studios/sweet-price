@@ -7,9 +7,9 @@ $radius-lg: 12px;
 $radius-xl: 14px;
 $radius-pill: 999px;
 
-$shadow-sm: 0 6px 16px rgba(27, 34, 51, 0.06);
-$shadow-md: 0 14px 40px rgba(27, 34, 51, 0.08);
-$shadow-lift: 0 16px 32px rgba(27, 34, 51, 0.16);
+$shadow-sm: 0 6px 16px rgba(var(--ink-900-rgb), 0.06);
+$shadow-md: 0 14px 40px rgba(var(--ink-900-rgb), 0.08);
+$shadow-lift: 0 16px 32px rgba(var(--ink-900-rgb), 0.16);
 
 $space-1: 4px;
 $space-2: 8px;

@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 // Escala de cores 100–900 (500 = tom principal, exatamente a cor de marca)
 // para cada papel do sistema. Cada faixa 100-900 é derivada do tom 500
 // mantendo o mesmo matiz/saturação e variando só a luminosidade — assim,
@@ -18,77 +20,157 @@
 //   de 10%): gradientes de fundo, ilustrações, badges de destaque
 //   pontuais (ex.: "Mais popular"). Usada ainda com mais moderação que a
 //   Primary.
-
-// Primária — rosa da marca SweetHub (CTAs, marca, navegação ativa) — 10%
+//
 // Diferente da paleta anterior, o tom de marca (500) sozinho NÃO garante
 // 4.5:1 contra branco (~2.7:1) — é um rosa vibrante de propósito. Por isso
 // texto/botão sobre fundo claro usa $primary-600 (~3.9:1) ou $primary-700
 // (~5.3:1, AA garantido) em vez do 500 puro (ver base/_buttons.scss).
-$primary-100: #fff6f9;
-$primary-200: #ffe9f0;
-$primary-300: #ffd0de;
-$primary-400: #ffa9c4;
-$primary-500: #ff6b99;
-$primary-600: #d1587d;
-$primary-700: #ad4968;
-$primary-800: #8c3b54;
-$primary-900: #61293a;
 
-// Secundária — vinho (links, bordas de destaque, badges) — 30%
-$secondary-100: #f7f2f4;
-$secondary-200: #ebdde3;
-$secondary-300: #d5b7c3;
-$secondary-400: #b37d91;
-$secondary-500: #7c1f42;
-$secondary-600: #661936;
-$secondary-700: #54152d;
-$secondary-800: #441124;
-$secondary-900: #2f0c19;
+// Mapa — ÚNICA fonte de valores hex de todo o projeto. Cada entrada vira,
+// logo abaixo, duas CSS custom properties (--nome e --nome-rgb, esta última
+// com os componentes separados por vírgula, pra permitir opacidade via
+// rgba(var(--nome-rgb), alpha) em qualquer .scss). As variáveis Sass
+// ($primary-500 etc., usadas em todo o resto do projeto exatamente como
+// antes) apontam pra var(--nome), nunca pro hex direto — então o CSS
+// final referencia a variável, e trocar uma cor aqui é a única edição
+// necessária pra propagar pro site inteiro.
+$colors: (
+  'primary-100': #fff6f9,
+  'primary-200': #ffe9f0,
+  'primary-300': #ffd0de,
+  'primary-400': #ffa9c4,
+  'primary-500': #ff6b99,
+  'primary-600': #d1587d,
+  'primary-700': #ad4968,
+  'primary-800': #8c3b54,
+  'primary-900': #61293a,
 
-// Terciária — rosa claro (gradientes, acentos decorativos, badges pontuais)
-$tertiary-100: #fdfbfc;
-$tertiary-200: #fbf6f8;
-$tertiary-300: #f7ebf0;
-$tertiary-400: #f0dce3;
-$tertiary-500: #e5c2cf;
-$tertiary-600: #bc9faa;
-$tertiary-700: #9b848d;
-$tertiary-800: #7e6b72;
-$tertiary-900: #574a4f;
+  'secondary-100': #f7f2f4,
+  'secondary-200': #ebdde3,
+  'secondary-300': #d5b7c3,
+  'secondary-400': #b37d91,
+  'secondary-500': #7c1f42,
+  'secondary-600': #661936,
+  'secondary-700': #54152d,
+  'secondary-800': #441124,
+  'secondary-900': #2f0c19,
 
-// Grayscale — escala 100–900 cinza-azulada fria, gerada com a mesma fórmula
-// de mistura das cores de marca (interpolação RGB em direção a branco/preto
-// a partir de um tom-base) — existe pra dar consistência a qualquer uso novo
-// de neutro fora dos tokens semânticos abaixo. $ink-900 é literalmente
-// $neutral-900 (mesmo valor); $ink-700/$ink-400 são tons de texto escolhidos
-// à mão antes dessa escala existir e ficam como estão pra não mudar nenhuma
-// cor já em tela — prefira $neutral-* em código novo.
-$neutral-100: #f4f5f8;
-$neutral-200: #e3e6ed;
-$neutral-300: #c4cad8;
-$neutral-400: #949fb9;
-$neutral-500: #475986;
-$neutral-600: #3a496e;
-$neutral-700: #303c5b;
-$neutral-800: #27314a;
-$neutral-900: #1b2233;
+  'tertiary-100': #fdfbfc,
+  'tertiary-200': #fbf6f8,
+  'tertiary-300': #f7ebf0,
+  'tertiary-400': #f0dce3,
+  'tertiary-500': #e5c2cf,
+  'tertiary-600': #bc9faa,
+  'tertiary-700': #9b848d,
+  'tertiary-800': #7e6b72,
+  'tertiary-900': #574a4f,
 
-// Neutros semânticos (texto, superfícies, fundo) — cinza-azulado frio
-$ink-900: $neutral-900; // texto principal
-$ink-700: #4c5568; // texto secundário / labels
-$ink-400: #8993a8; // texto auxiliar / placeholders
-$white: #fff; // texto/ícone sobre fundo colorido (não confundir com $surface)
-$input-bg-focus: #fffdfb; // fundo levemente creme de input em hover/foco
-$surface: #fff;
-$surface-tint: #eef1f7;
-$bg: #f5f7fb;
-$border: rgba($ink-900, 0.1);
+  // Grayscale — escala 100–900 cinza-azulada fria, gerada com a mesma
+  // fórmula de mistura das cores de marca (interpolação RGB em direção a
+  // branco/preto a partir de um tom-base). neutral-900 é o mesmo tom usado
+  // como $ink-900 (ver alias em :root, mais abaixo).
+  'neutral-100': #f4f5f8,
+  'neutral-200': #e3e6ed,
+  'neutral-300': #c4cad8,
+  'neutral-400': #949fb9,
+  'neutral-500': #475986,
+  'neutral-600': #3a496e,
+  'neutral-700': #303c5b,
+  'neutral-800': #27314a,
+  'neutral-900': #1b2233,
 
-// Sistema (feedback) — danger/success com tom claro (100, fundo sólido de
-// badge/alerta) e tom base (500, texto/ícone/borda) — mesmo tom-base já usado
-// hoje como texto direto tem contraste AA garantido contra branco, então não
-// precisam de uma variação -700 como as cores de marca.
-$danger-100: #fce7e5;
-$danger-500: #ba352e;
-$success-100: #f2f7f5;
-$success-500: #267f56;
+  // Neutros semânticos (texto, superfícies, fundo). ink-700/ink-400 são
+  // tons escolhidos à mão antes da escala neutral-* existir — mantidos como
+  // estão (não são um passo exato da escala acima) pra não mudar nenhuma
+  // cor já em tela.
+  'ink-700': #4c5568,
+  'ink-400': #8993a8,
+  'white': #fff,
+  'input-bg-focus': #fffdfb,
+  'surface': #fff,
+  'surface-tint': #eef1f7,
+  'bg': #f5f7fb,
+
+  // Sistema (feedback) — tom claro (100, fundo sólido de badge/alerta) e
+  // tom base (500, texto/ícone/borda); o tom base já usado direto como
+  // texto tem contraste AA garantido contra branco, então não precisam de
+  // uma variação -700 como as cores de marca.
+  'danger-100': #fce7e5,
+  'danger-500': #ba352e,
+  'success-100': #f2f7f5,
+  'success-500': #267f56,
+);
+
+:root {
+  @each $name, $value in $colors {
+    --#{$name}: #{$value};
+    --#{$name}-rgb: #{color.channel($value, 'red')}, #{color.channel($value, 'green')}, #{color.channel($value, 'blue')};
+  }
+
+  // Alias: ink-900 é sempre igual a neutral-900 (mesmo tom, papel semântico
+  // diferente: "texto principal" vs. degrau da escala cinza) — referencia
+  // em vez de duplicar o hex.
+  --ink-900: var(--neutral-900);
+  --ink-900-rgb: var(--neutral-900-rgb);
+
+  // Derivada (é sempre ink-900 com opacidade fixa) — não é uma cor sólida
+  // própria, por isso não entra no mapa acima.
+  --border: rgba(var(--ink-900-rgb), 0.1);
+}
+
+// Variáveis Sass — usadas em todo o resto do projeto exatamente como antes
+// ($primary-500 etc.), agora resolvendo pra var(--nome) em vez do hex.
+$primary-100: var(--primary-100);
+$primary-200: var(--primary-200);
+$primary-300: var(--primary-300);
+$primary-400: var(--primary-400);
+$primary-500: var(--primary-500);
+$primary-600: var(--primary-600);
+$primary-700: var(--primary-700);
+$primary-800: var(--primary-800);
+$primary-900: var(--primary-900);
+
+$secondary-100: var(--secondary-100);
+$secondary-200: var(--secondary-200);
+$secondary-300: var(--secondary-300);
+$secondary-400: var(--secondary-400);
+$secondary-500: var(--secondary-500);
+$secondary-600: var(--secondary-600);
+$secondary-700: var(--secondary-700);
+$secondary-800: var(--secondary-800);
+$secondary-900: var(--secondary-900);
+
+$tertiary-100: var(--tertiary-100);
+$tertiary-200: var(--tertiary-200);
+$tertiary-300: var(--tertiary-300);
+$tertiary-400: var(--tertiary-400);
+$tertiary-500: var(--tertiary-500);
+$tertiary-600: var(--tertiary-600);
+$tertiary-700: var(--tertiary-700);
+$tertiary-800: var(--tertiary-800);
+$tertiary-900: var(--tertiary-900);
+
+$neutral-100: var(--neutral-100);
+$neutral-200: var(--neutral-200);
+$neutral-300: var(--neutral-300);
+$neutral-400: var(--neutral-400);
+$neutral-500: var(--neutral-500);
+$neutral-600: var(--neutral-600);
+$neutral-700: var(--neutral-700);
+$neutral-800: var(--neutral-800);
+$neutral-900: var(--neutral-900);
+
+$ink-900: var(--ink-900); // texto principal
+$ink-700: var(--ink-700); // texto secundário / labels
+$ink-400: var(--ink-400); // texto auxiliar / placeholders
+$white: var(--white); // texto/ícone sobre fundo colorido (não confundir com $surface)
+$input-bg-focus: var(--input-bg-focus); // fundo levemente creme de input em hover/foco
+$surface: var(--surface);
+$surface-tint: var(--surface-tint);
+$bg: var(--bg);
+$border: var(--border);
+
+$danger-100: var(--danger-100);
+$danger-500: var(--danger-500);
+$success-100: var(--success-100);
+$success-500: var(--success-500);
