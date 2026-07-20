@@ -491,12 +491,15 @@
     .data-table-actions {
       display: flex;
       flex-direction: row;
+      justify-content: flex-end;
+      gap: 8px;
       margin-top: 10px;
 
       button,
       .item-card-link {
-        flex: 1;
-        justify-content: center;
+        flex: none;
+        padding: 0.4rem 0.7rem;
+        font-size: $fs-xs;
       }
     }
 

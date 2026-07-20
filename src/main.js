@@ -976,7 +976,7 @@ function readOnlyIngredientsTable(editorKey, visible) {
           <td>${escapeHtml(ingredient.usedAmount)}</td>
           <td>${escapeHtml(ingredient.unit)}</td>
           <td>${formatCurrency(usedCost)}</td>
-          <td class="data-table-actions"><button class="ghost" type="button" data-action="remove-ingredient" data-editor="${editorKey}" data-id="${ingredient.id}">Excluir</button></td>
+          <td class="data-table-actions"><button class="danger" type="button" data-action="remove-ingredient" data-editor="${editorKey}" data-id="${ingredient.id}">Excluir</button></td>
         </tr>`;
       }).join('')}
     </tbody>
@@ -1139,7 +1139,7 @@ function productsTable(list, { selectable = true } = {}) {
           <td data-label="Preço un.">${priceUn}</td>
           <td class="data-table-actions">
             <button type="button" class="ghost" data-action="open-produto" data-id="${product.id}">Editar</button>
-            <button type="button" class="ghost" data-action="delete-product" data-id="${product.id}" data-name="${escapeHtml(product.name)}">Excluir</button>
+            <button type="button" class="danger" data-action="delete-product" data-id="${product.id}" data-name="${escapeHtml(product.name)}">Excluir</button>
           </td>
         </tr>`;
       }).join('')}
@@ -1851,7 +1851,7 @@ function renderIngredientesPage() {
               <td data-label="Marca">${i.brand ? escapeHtml(i.brand) : '—'}</td>
               <td class="data-table-actions">
                 <button type="button" class="ghost" data-action="open-edit-ingredient" data-id="${i.id}">Editar</button>
-                <button type="button" class="ghost" data-action="delete-saved-ingredient" data-id="${i.id}">Excluir</button>
+                <button type="button" class="danger" data-action="delete-saved-ingredient" data-id="${i.id}">Excluir</button>
               </td>
             </tr>`).join('')}
         </tbody>
@@ -1886,7 +1886,7 @@ function renderDespesasPage() {
               <td data-label="Alocado">${formatCurrency(allocated)}</td>
               <td class="data-table-actions">
                 <button type="button" class="ghost" data-action="open-edit-expense" data-id="${expense.id}">Editar</button>
-                <button type="button" class="ghost" data-action="delete-expense" data-id="${expense.id}">Excluir</button>
+                <button type="button" class="danger" data-action="delete-expense" data-id="${expense.id}">Excluir</button>
               </td>
             </tr>`;
           }).join('')}
@@ -1923,7 +1923,7 @@ function renderLucroPage() {
               <td>${escapeHtml(percentFromMultiplier(tier.multiplier))}%</td>
               <td class="data-table-actions">
                 <button type="button" class="ghost" data-action="open-edit-tier" data-id="${tier.id}">Editar</button>
-                <button type="button" class="ghost" data-action="delete-tier" data-id="${tier.id}">Excluir</button>
+                <button type="button" class="danger" data-action="delete-tier" data-id="${tier.id}">Excluir</button>
               </td>
             </tr>`).join('')}
         </tbody>
@@ -1961,7 +1961,7 @@ function renderFornecedoresPage() {
               <td>${s.email ? escapeHtml(s.email) : '—'}</td>
               <td class="data-table-actions">
                 <button type="button" class="ghost" data-action="open-edit-supplier" data-id="${s.id}">Editar</button>
-                <button type="button" class="ghost" data-action="delete-supplier" data-id="${s.id}">Excluir</button>
+                <button type="button" class="danger" data-action="delete-supplier" data-id="${s.id}">Excluir</button>
               </td>
             </tr>`).join('')}
         </tbody>
@@ -2001,7 +2001,7 @@ function renderClientesPage() {
               <td>${c.email ? escapeHtml(c.email) : '—'}</td>
               <td class="data-table-actions">
                 <button type="button" class="ghost" data-action="open-edit-customer" data-id="${c.id}">Editar</button>
-                <button type="button" class="ghost" data-action="delete-customer" data-id="${c.id}">Excluir</button>
+                <button type="button" class="danger" data-action="delete-customer" data-id="${c.id}">Excluir</button>
               </td>
             </tr>`).join('')}
         </tbody>
@@ -2379,7 +2379,7 @@ function mobileDrawer(displayName) {
             <button type="button" class="icon-btn ghost" data-action="toggle-mobile-menu" aria-label="Fechar menu">${icon('close')}</button>
           </div>
         </div>
-        <div class="mobile-drawer-plan">${planLabel(state.profile)}</div>
+        <div class="mobile-drawer-plan"><span class="mobile-drawer-plan-label">Plano:</span> ${planLabel(state.profile)}</div>
         <ul class="mobile-drawer-nav">
           ${navItem('produtos', 'Receitas')}
           ${navDropdown(NAV_GROUPS[0])}
