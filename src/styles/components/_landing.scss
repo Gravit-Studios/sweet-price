@@ -9,11 +9,6 @@
 // translúcido + blur (glassmorphism) em vez do branco sólido padrão. Nas
 // páginas públicas sem foto atrás (vitrine, termos etc.) o navbar continua
 // normal, sólido e no fluxo — só essa variante muda.
-@keyframes landing-nav-slide-in {
-  from { transform: translateY(-100%); }
-  to { transform: translateY(0); }
-}
-
 .landing-nav-overlay {
   position: absolute;
   top: 0;
@@ -24,7 +19,20 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  transform: translateY(0);
   transition: background 0.25s ease, border-color 0.25s ease;
+
+  // Estado transitório de um frame só (ver updateLandingNavScrolled em
+  // main.js): força a posição fora da tela sem transição, pra no frame
+  // seguinte somar .is-scrolled e deslizar de verdade até o lugar — usar
+  // uma CSS animation aqui em vez disso quebrava o esconde/revela ao rolar
+  // (updateHeaderVisibility): depois que a animation termina de tocar, ela
+  // continua "dona" da propriedade transform nesse elemento e a transition
+  // do is-hidden parava de funcionar, fazendo o navbar reaparecer de golpe
+  // ao rolar pra cima em vez de deslizar.
+  &.is-entering {
+    transform: translateY(-100%);
+  }
 
   .landing-nav-links a {
     color: $white;
@@ -57,7 +65,8 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     border-bottom: 1px solid $border;
-    animation: landing-nav-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(0);
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 
     .landing-nav-links a {
       color: $ink-700;
@@ -74,6 +83,49 @@
       &:hover {
         color: $ink-900;
       }
+    }
+  }
+
+  // .navbar.is-hidden (esconder ao rolar pra baixo, ver updateHeaderVisibility
+  // em main.js) e .is-scrolled têm a mesma especificidade (2 classes cada) —
+  // sem essa regra mais específica, o translateY(0) do .is-scrolled acima
+  // ganhava do translateY(-100%) do is-hidden só por vir depois no CSS
+  // compilado (_landing.scss é importado depois de _navbar.scss), anulando o
+  // esconde-ao-rolar sempre que o navbar já estivesse sólido.
+  &.is-scrolled.is-hidden {
+    transform: translateY(-100%);
+  }
+
+  // Duas versões do logotipo empilhadas (ver landingNav em main.js) — só
+  // opacity, crossfade simples acompanhando o mesmo is-scrolled do resto.
+  // O .brand precisa de tamanho explícito aqui: com os dois <img> em
+  // position:absolute (pra empilhar um sobre o outro), eles saem do fluxo e
+  // o botão colapsaria pra 0x0 sem essa largura/altura fixas.
+  .brand {
+    position: relative;
+    width: 125px;
+    height: 44px;
+  }
+
+  .brand-logo-negative,
+  .brand-logo-solid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .brand-logo-solid {
+    opacity: 0;
+  }
+
+  &.is-scrolled {
+    .brand-logo-negative {
+      opacity: 0;
+    }
+
+    .brand-logo-solid {
+      opacity: 1;
     }
   }
 }

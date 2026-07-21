@@ -2708,7 +2708,7 @@ const LANDING_STEPS_BIG_PHOTOS = [
   { src: '/assets/img/pexels-anntarazevich-6035994.webp', alt: 'Confeiteira preparando uma receita' },
   { src: '/assets/img/pexels-anntarazevich-6036020.webp', alt: 'Calda de chocolate sendo derramada' },
   { src: '/assets/img/pexels-amar-9329437.webp', alt: 'Doces prontos para servir' },
-  { src: '/assets/img/pexels-amar-9329437.webp', alt: 'Vitrine com doces prontos para venda' },
+  { src: '/assets/img/pexels-handmrts-19347074.webp', alt: 'Vitrine com doces prontos para venda' },
 ];
 
 // Gratuito é permanente, sem cartão (ver planStatus/planLimits.js) — por
@@ -2795,11 +2795,20 @@ function planCheckoutButton(planKey, billingCycle = 'mensal', label) {
 }
 
 function landingNav(overlay = false) {
+  // No topo (transparente sobre a foto do hero) usa a versão negativa do
+  // logotipo (texto branco); ao rolar (is-scrolled, fundo sólido) troca pra
+  // versão original — as duas ficam empilhadas e o crossfade é só opacity,
+  // acompanhando a mesma classe is-scrolled que já controla o resto do
+  // navbar (ver updateLandingNavScrolled em main.js e _landing.scss).
+  const logo = overlay
+    ? `<img src="/assets/logotipo/SVG/logotipo-negative.png" alt="SweetHub" class="brand-logo brand-logo-negative" />
+       <img src="/assets/logotipo/SVG/logotipo-original.png" alt="SweetHub" class="brand-logo brand-logo-solid" />`
+    : `<img src="/assets/logotipo/SVG/logotipo-original.png" alt="SweetHub" class="brand-logo" />`;
   return `
     <header class="navbar landing-nav${overlay ? ' landing-nav-overlay' : ''}">
       <div class="navbar-inner">
         <button type="button" class="brand" data-action="landing-home">
-          <img src="/assets/logotipo/SVG/logotipo-original.png" alt="SweetHub" class="brand-logo" />
+          ${logo}
         </button>
         <ul class="landing-nav-links">
           <li><a href="#beneficios">Benefícios</a></li>
@@ -3593,7 +3602,21 @@ const NAV_OVERLAY_SCROLL_THRESHOLD = 40;
 function updateLandingNavScrolled() {
   const nav = app.querySelector('.landing-nav-overlay');
   if (!nav) return;
-  nav.classList.toggle('is-scrolled', window.scrollY > NAV_OVERLAY_SCROLL_THRESHOLD);
+  const shouldBeScrolled = window.scrollY > NAV_OVERLAY_SCROLL_THRESHOLD;
+  if (shouldBeScrolled === nav.classList.contains('is-scrolled')) return;
+  if (shouldBeScrolled) {
+    // Truque do reflow forçado: aplica a posição de fora da tela (is-entering,
+    // sem transição) primeiro, força o navegador a computar esse estado, e só
+    // então soma is-scrolled — daí a transition (ver _landing.scss) desliza de
+    // verdade entre os dois estados em vez de trocar tudo na mesma passada
+    // (o que não geraria nenhuma transição, só o fundo trocando na hora).
+    nav.classList.add('is-entering');
+    void nav.offsetHeight;
+    nav.classList.remove('is-entering');
+    nav.classList.add('is-scrolled');
+  } else {
+    nav.classList.remove('is-scrolled', 'is-entering');
+  }
 }
 
 window.addEventListener('scroll', () => {
