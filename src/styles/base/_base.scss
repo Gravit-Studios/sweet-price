@@ -4,11 +4,13 @@ html {
   color: $ink-900;
   font-family: $font-body;
   scroll-behavior: smooth;
-  // Precisa estar aqui também, não só no body: o scroll horizontal
-  // indesejado (ver comentário no body abaixo) é medido contra o html
-  // (documentElement) em vários navegadores, então overflow-x: hidden só
-  // no body não bastava pra segurar.
-  overflow-x: hidden;
+  // "clip" aqui (não "hidden") pelo mesmo motivo do body: overflow-x:
+  // hidden no html quebra position: sticky de qualquer descendente (o
+  // navbar, o header do cardápio público, o pin da seção "Como funciona"
+  // etc. paravam de grudar e simplesmente roleriam pra fora da tela) —
+  // confirmado isolando o caso num teste à parte. clip corta o
+  // transbordo horizontal do mesmo jeito, sem esse efeito colateral.
+  overflow-x: clip;
 }
 
 body {
@@ -16,10 +18,10 @@ body {
   background: $white;
   // O banner do dashboard usa 100vw pra escapar do padding do .page (ver
   // .banner em _banner.scss) e o CTA final da landing usa margem lateral
-  // negativa (ver .landing-final-cta); overflow-x: hidden evita a barra de
-  // rolagem horizontal que esses truques podem gerar em navegadores com
-  // scrollbar clássica (não-overlay).
-  overflow-x: hidden;
+  // negativa (ver .landing-final-cta); overflow-x corta a rolagem
+  // horizontal que esses truques podem gerar em navegadores com scrollbar
+  // clássica (não-overlay). "clip", não "hidden" — ver comentário no html.
+  overflow-x: clip;
 }
 
 h1,

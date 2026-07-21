@@ -630,10 +630,11 @@
     opacity: 1;
 
     // Sem o pin, o progresso do scroll fica travado em 0 (ver
-    // updateStepsBigPhoto em main.js) — sem essa exceção, só o primeiro
-    // passo ficaria colorido pra sempre, os outros nunca.
+    // updateStepsBigPhoto em main.js) — em vez de deixar só o primeiro
+    // passo "revelado" (cor primária) pra sempre e os outros apagados,
+    // todos os títulos já nascem na cor final de destaque.
     .landing-steps-big-text h3 {
-      color: $ink-900;
+      color: $primary-600;
     }
   }
 }
