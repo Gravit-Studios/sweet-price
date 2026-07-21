@@ -2925,9 +2925,9 @@ function landingFeaturePanel() {
 }
 
 const LANDING_HIGHLIGHTS = [
-  { emoji: '📈', text: 'Custo real calculado' },
-  { emoji: '🧮', text: 'Preço sugerido automático' },
-  { emoji: '🛡️', text: 'Gestão da sua confeitaria' },
+  { icon: '/assets/icons/custo-real.png', text: 'Custo real calculado' },
+  { icon: '/assets/icons/preco-sugerido.png', text: 'Preço sugerido automático' },
+  { icon: '/assets/icons/gestao.png', text: 'Gestão da sua confeitaria' },
 ];
 
 function landingHighlightsStrip() {
@@ -2935,7 +2935,7 @@ function landingHighlightsStrip() {
     <div class="landing-highlights">
       <div class="landing-section-inner landing-highlights-inner">
         ${LANDING_HIGHLIGHTS.map((h) => `
-          <div class="landing-highlight"><span class="landing-highlight-emoji" aria-hidden="true">${h.emoji}</span><span>${escapeHtml(h.text)}</span></div>`).join('')}
+          <div class="landing-highlight"><img src="${h.icon}" alt="" class="landing-highlight-icon" /><span>${escapeHtml(h.text)}</span></div>`).join('')}
       </div>
     </div>`;
 }

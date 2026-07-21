@@ -565,10 +565,11 @@
   }
 }
 
-.landing-highlight-emoji {
-  font-size: 1.2rem;
-  line-height: 1;
+.landing-highlight-icon {
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 // "Como funciona": lista editorial com números grandes. A seção fica fixa
