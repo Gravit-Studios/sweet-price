@@ -33,15 +33,21 @@
   }
 }
 
-// Empurra o CTA (e o toggle de categorias, quando existe) pra direita do
-// logotipo — margin-left: auto no primeiro item depois da marca já consome
-// todo o espaço livre da linha, então o toggle (que também tem seu próprio
-// margin-left: auto em _navbar.scss) fica coladinho a ele, só com o gap
-// acima entre os dois.
-.menu-budget-cta {
-  margin-left: auto;
-  flex-shrink: 0;
-  white-space: nowrap;
+// "Solicitar orçamento" mora dentro do menu (.menu-sidebar no desktop,
+// .mobile-drawer-nav no mobile) — um item com destaque visual (cor +
+// divisória acima) pra diferenciar de um link de categoria comum. Seletor
+// composto (não só a classe solta) pra especificidade bater ou superar a
+// do botão/nav-link genérico do menu que já define cor/padding.
+.menu-sidebar .menu-nav-budget-cta,
+.mobile-drawer-nav .menu-nav-budget-cta {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid $border;
+  color: $primary-600;
+
+  &:hover {
+    color: $primary-700;
+  }
 }
 
 .menu-brand {

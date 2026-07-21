@@ -3397,8 +3397,11 @@ function deriveMenuCategories(products) {
   return categories;
 }
 
+// "Solicitar orçamento" mora dentro do menu (barra lateral no desktop,
+// drawer no mobile) em vez de um botão solto no header — por isso o menu
+// (toggle + drawer) sempre existe agora, mesmo pra loja com uma categoria
+// só ou nenhuma, que antes não tinha motivo pra ter menu nenhum.
 function publicMenuHeader(company, categories) {
-  const hasNav = categories.length > 1;
   return `
     <header class="menu-header">
       <div class="menu-header-inner">
@@ -3407,28 +3410,28 @@ function publicMenuHeader(company, categories) {
             ? `<img src="${escapeHtml(company.logo_url)}" alt="${escapeHtml(company.company_name || 'Cardápio')}" class="menu-logo" />`
             : `<span>${escapeHtml(company.company_name || 'Cardápio')}</span>`}
         </a>
-        <button type="button" class="ghost menu-budget-cta" data-action="open-budget-form">Solicitar orçamento</button>
-        ${hasNav ? `<button type="button" class="navbar-menu-toggle" data-action="toggle-mobile-menu" aria-label="Abrir categorias">${icon('menu')}</button>` : ''}
+        <button type="button" class="navbar-menu-toggle" data-action="toggle-mobile-menu" aria-label="Abrir menu">${icon('menu')}</button>
       </div>
     </header>
-    ${hasNav ? publicMenuNavDrawer(company, categories) : ''}`;
+    ${publicMenuNavDrawer(company, categories)}`;
 }
 
-// Menu de categorias no mobile: mesmo drawer lateral do app logado (mesma
-// classe, mesmo estado state.mobileMenuOpen e a mesma ação
-// "toggle-mobile-menu" de abrir/fechar/clicar fora) — no desktop a barra
-// lateral (.menu-sidebar) já cobre a navegação, então o CSS esconde esse
-// drawer lá (ver _menu.scss).
+// Menu no mobile: mesmo drawer lateral do app logado (mesma classe, mesmo
+// estado state.mobileMenuOpen e a mesma ação "toggle-mobile-menu" de
+// abrir/fechar/clicar fora) — no desktop a barra lateral (.menu-sidebar)
+// cobre o mesmo conteúdo, então o CSS esconde esse drawer lá (ver
+// _menu.scss).
 function publicMenuNavDrawer(company, categories) {
   return `
     <div class="mobile-drawer-overlay ${state.mobileMenuOpen ? 'open' : ''}">
       <nav class="mobile-drawer">
         <div class="mobile-drawer-header">
           <span class="brand">${escapeHtml(company.company_name || 'Cardápio')}</span>
-          <button type="button" class="icon-btn ghost" data-action="toggle-mobile-menu" aria-label="Fechar categorias">${icon('close')}</button>
+          <button type="button" class="icon-btn ghost" data-action="toggle-mobile-menu" aria-label="Fechar menu">${icon('close')}</button>
         </div>
         <ul class="mobile-drawer-nav">
           ${categories.map((cat) => `<li><button type="button" class="nav-link" data-action="scroll-to-menu-category" data-target="cat-${slugify(cat)}">${escapeHtml(cat)}</button></li>`).join('')}
+          <li><button type="button" class="nav-link menu-nav-budget-cta" data-action="open-budget-form">Solicitar orçamento</button></li>
         </ul>
       </nav>
     </div>`;
@@ -3485,10 +3488,10 @@ function renderPublicMenuList(menu) {
     <div class="menu-page">
       ${publicMenuHeader(company, categories)}
       <div class="menu-body">
-        ${categories.length > 1 ? `
-          <nav class="menu-sidebar">
-            ${categories.map((cat) => `<button type="button" data-action="scroll-to-menu-category" data-target="cat-${slugify(cat)}">${escapeHtml(cat)}</button>`).join('')}
-          </nav>` : ''}
+        <nav class="menu-sidebar">
+          ${categories.length > 1 ? categories.map((cat) => `<button type="button" data-action="scroll-to-menu-category" data-target="cat-${slugify(cat)}">${escapeHtml(cat)}</button>`).join('') : ''}
+          <button type="button" class="menu-nav-budget-cta" data-action="open-budget-form">Solicitar orçamento</button>
+        </nav>
         <div class="menu-content">
           ${products.length === 0
             ? '<p class="menu-empty">Nenhum produto publicado ainda.</p>'
@@ -5457,6 +5460,7 @@ app.addEventListener('click', (event) => {
       break;
     case 'open-budget-form':
       state.showBudgetForm = true;
+      state.mobileMenuOpen = false;
       render();
       break;
     case 'close-budget-form':
