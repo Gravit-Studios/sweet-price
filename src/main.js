@@ -2909,7 +2909,7 @@ function landingFeaturePanel() {
       <div class="landing-feature-overlay"></div>
       <div class="landing-section-inner landing-feature-inner">
         <p class="eyebrow-pill landing-feature-eyebrow">Praticidade todo dia</p>
-        <h2>Feito pra rotina da sua confeitaria</h2>
+        <h2>Feito pra rotina <em>da sua confeitaria</em></h2>
         <p class="landing-section-subtitle">Sem planilha, sem calculadora, sem achismo — só o preço certo, sempre à mão.</p>
         <div class="landing-feature-cards">
           ${cards.map((c, i) => `
@@ -2971,7 +2971,7 @@ function landingHtml() {
       <section class="landing-section" id="precos">
         <div class="landing-section-inner">
           <p class="eyebrow-pill">Planos</p>
-          <h2><span class="muted-tone">Escolha o plano</span> da sua confeitaria</h2>
+          <h2><span class="muted-tone">Escolha o plano</span> <em class="accent-tone">da sua confeitaria</em></h2>
           <p class="landing-section-subtitle">O plano Gratuito não tem prazo nem cartão. Cancele quando quiser.</p>
           <div class="landing-billing-toggle">
             <button type="button" class="${state.landingBillingCycle === 'mensal' ? 'is-active' : ''}" data-action="set-landing-billing-cycle" data-cycle="mensal">Mensal</button>

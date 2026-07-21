@@ -98,6 +98,11 @@
   color: $secondary-500;
 }
 
+.accent-tone {
+  color: $primary-600;
+  font-style: italic;
+}
+
 // Hero novo: foto full-bleed (degradê já vem embutido na imagem, escurecendo
 // a esquerda) com o texto sobreposto de um lado e o mockup fake flutuando do
 // outro, cercado de cartõezinhos (depoimento/métrica/selo) com bob contínuo
