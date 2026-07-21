@@ -996,10 +996,11 @@ function renderMenuFields(editorKey, editor) {
     </div>` : ''}
     <label style="margin-top:16px;">Sabor<input type="text" data-editor="${editorKey}" data-field="menuFlavor" placeholder="Ex.: Tradicional recheado com doce de leite" value="${escapeHtml(editor.menuFlavor)}" /></label>
     <label style="margin-top:16px;">Descrição<textarea data-editor="${editorKey}" data-field="menuDescription" rows="3" placeholder="Uma breve descrição que aparece na página do produto">${escapeHtml(editor.menuDescription)}</textarea></label>
+    ${MENU_GALLERY_ENABLED ? `
     <div style="margin-top:16px;">
       <label>Mais fotos da vitrine</label>
       ${menuPhotoGallery(editorKey, editor)}
-    </div>
+    </div>` : ''}
     <label class="consent-field consent-field-inline" style="margin-top:16px;">
       <input type="checkbox" data-action="toggle-menu-published" ${editor.menuPublished ? 'checked' : ''} />
       <span>Publicar no cardápio</span>
@@ -1010,6 +1011,12 @@ function renderMenuFields(editorKey, editor) {
 // vitrine aceita até MENU_PHOTOS_MAX fotos extras — mais ângulos/variações
 // do doce. Cada miniatura tem seu próprio botão de remover; um único input
 // de arquivo (oculto) cobre o "ladrilho" de adicionar.
+//
+// MENU_GALLERY_ENABLED: desligado por enquanto a pedido (só a foto principal
+// por produto por ora) — o botão de adicionar mais fotos some do editor,
+// mas fotos já salvas continuam existindo no banco e aparecendo na vitrine
+// pública normalmente. É só reativar a flag quando o recurso voltar.
+const MENU_GALLERY_ENABLED = false;
 const MENU_PHOTOS_MAX = 5;
 
 function menuPhotoGallery(editorKey, editor) {
@@ -3146,11 +3153,18 @@ function landingHtml() {
 
 // Barra de cookies padrão de mercado: some assim que aceita, guardado no
 // localStorage pra não voltar a aparecer nas próximas visitas.
-function cookieBar() {
+//
+// publicMenuPage=true: usada no cardápio público (/loja/:slug), onde um
+// data-action="goto" não navega (ver comentário em publicMenuFooter) — o
+// link de privacidade abre em nova aba apontando pra raiz do app.
+function cookieBar(publicMenuPage = false) {
   if (state.cookieConsent) return '';
+  const privacyLink = publicMenuPage
+    ? `<a class="text-link" href="/#/privacidade" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>`
+    : `<button type="button" class="text-link" data-action="goto" data-route="privacidade">Política de Privacidade</button>`;
   return `
     <div class="cookie-bar">
-      <p>Usamos cookies para melhorar sua experiência e analisar o uso do site. Ao continuar navegando, você concorda com nossa <button type="button" class="text-link" data-action="goto" data-route="privacidade">Política de Privacidade</button>.</p>
+      <p>Usamos cookies para melhorar sua experiência e analisar o uso do site. Ao continuar navegando, você concorda com nossa ${privacyLink}.</p>
       <button type="button" data-action="accept-cookies">Aceitar</button>
     </div>`;
 }
@@ -3421,16 +3435,19 @@ function publicMenuNavDrawer(company, categories) {
 }
 
 function publicMenuFooter(company) {
-  const links = PUBLIC_DELIVERY_BRANDS
-    .map((brand) => ({ brand, url: company[brand.key] }))
-    .filter((l) => isHttpUrl(l.url));
+  // Termos/Privacidade abrem em nova aba apontando pra raiz do app (/#/...)
+  // em vez do data-action="goto" normal: /loja/:slug é uma rota "de
+  // verdade" (ver parsePublicMenuPath em router.js), que tem prioridade
+  // sobre o hash em QUALQUER mudança de hash na mesma aba — um botão
+  // data-action="goto" aqui nunca sairia do cardápio.
   return `
     <footer class="site-footer menu-footer">
       <div class="site-footer-inner">
         <span>&copy; ${new Date().getFullYear()} ${escapeHtml(company.company_name || '')}.</span>
-        ${links.length ? `<div class="delivery-shortcuts" style="margin:0;">
-          ${links.map((l) => `<a class="delivery-shortcut" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${deliveryBadge(l.brand, 'delivery-badge-sm')}<span>${escapeHtml(l.brand.label)}</span></a>`).join('')}
-        </div>` : ''}
+        <nav class="site-footer-links">
+          <a href="/#/termos" target="_blank" rel="noopener noreferrer">Termos de uso</a>
+          <a href="/#/privacidade" target="_blank" rel="noopener noreferrer">Privacidade</a>
+        </nav>
         <span class="site-footer-badge">Powered by: <strong>Gravit</strong></span>
       </div>
     </footer>`;
@@ -3505,7 +3522,8 @@ function renderPublicMenuList(menu) {
           <button type="button" class="menu-lightbox-close" data-action="close-menu-lightbox" aria-label="Fechar">${icon('close')}</button>
           <img src="${escapeHtml(state.menuLightboxUrl)}" alt="" />
         </div>` : ''}
-    </div>`;
+    </div>
+    ${cookieBar(true)}`;
 }
 
 // Formulário público de "Solicitar orçamento" (ver showBudgetForm) — troca
@@ -3527,7 +3545,8 @@ function renderBudgetRequestForm(company) {
           </div>
         </div>
         ${publicMenuFooter(company)}
-      </div>`;
+      </div>
+      ${cookieBar(true)}`;
   }
   return `
     <div class="menu-page">
@@ -3551,7 +3570,8 @@ function renderBudgetRequestForm(company) {
         </div>
       </div>
       ${publicMenuFooter(company)}
-    </div>`;
+    </div>
+    ${cookieBar(true)}`;
 }
 
 async function handleBudgetRequestSubmit(formEl) {

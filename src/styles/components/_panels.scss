@@ -58,10 +58,30 @@
     position: sticky;
     top: $navbar-height;
     z-index: 8;
-    background: $white;
     padding: 12px 0;
     margin: -12px 0 8px;
-    transition: top 0.25s ease, box-shadow 0.25s ease;
+    transition: top 0.25s ease;
+
+    // O fundo/sombra fica num ::before de 100vw em vez de no próprio
+    // elemento: .section-header-sticky é filho de .page, que tem largura
+    // máxima de 1200px + padding lateral — sem esse truque, o fundo branco
+    // ficava do tamanho do conteúdo (uma "faixa" flutuando com um corte
+    // visível nas laterais), em vez de ir de ponta a ponta da tela como um
+    // toolbar de verdade. z-index: -1 dentro do próprio contexto de
+    // empilhamento (criado pelo position: sticky do pai) garante que fique
+    // atrás do título/botões, não por cima.
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 100vw;
+      transform: translateX(-50%);
+      background: $white;
+      z-index: -1;
+      transition: box-shadow 0.25s ease;
+    }
 
     // Ao rolar pra baixo o navbar some (translateY, ver .navbar.is-hidden em
     // _navbar.scss) — sem isso esse cabeçalho ficava "flutuando" com um vão
@@ -71,7 +91,10 @@
     // main.js).
     &.navbar-collapsed {
       top: 0;
-      box-shadow: $shadow-sm;
+
+      &::before {
+        box-shadow: $shadow-sm;
+      }
     }
   }
 }

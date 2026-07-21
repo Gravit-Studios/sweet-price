@@ -245,14 +245,14 @@
 .menu-item-flavor {
   margin: 8px 0 0;
   color: $ink-900;
-  font-size: 1rem;
+  font-size: 0.8rem;
   line-height: $lh-body;
 }
 
 .menu-item-description {
   margin: 8px 0 0;
   color: $ink-400;
-  font-size: $fs-sm;
+  font-size: 0.7rem;
   line-height: $lh-body;
 }
 
@@ -267,7 +267,7 @@
 
 .menu-item-links-label {
   color: $ink-400;
-  font-size: $fs-sm;
+  font-size: 0.7rem;
 }
 
 // Só os selos, sem o texto do nome do app ao lado (ver .delivery-shortcut-

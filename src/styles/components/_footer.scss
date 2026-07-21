@@ -28,12 +28,17 @@
   display: flex;
   gap: 18px;
 
-  button {
+  // O footer do cardápio público (publicMenuFooter) usa <a> em vez de
+  // button data-action="goto" — ver comentário lá sobre /loja/:slug não
+  // reagir a mudança de hash na mesma aba.
+  button,
+  a {
     background: none;
     padding: 0;
     color: $ink-400;
     font-weight: $fw-medium;
     font-size: $fs-xs;
+    text-decoration: none;
 
     &:hover {
       box-shadow: none;
