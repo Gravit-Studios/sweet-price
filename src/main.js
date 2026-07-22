@@ -3240,12 +3240,15 @@ function landingHtml() {
 
 // Cada passo: título quebrado em parte normal + parte de destaque (rosa,
 // itálico serifado), e 2 fotos com etiqueta de preço penduradas ao lado.
+// word: palavra gigante quase transparente atrás de cada passo — textura de
+// fundo tipográfica (ver .landing-v2-step-word), relacionada ao tema do passo.
 const LANDING_V2_STEPS = [
   {
     num: '01',
     title: 'Cadastre ingredientes',
     accent: 'e despesas',
     text: 'Preço de compra, quantidade e as despesas fixas do seu negócio — uma vez só, tudo num só lugar.',
+    word: 'ingredientes',
     photos: [
       { src: '/assets/img/pexels-anntarazevich-6035994.webp', alt: 'Confeiteira preparando uma receita', price: 'R$ 16,00' },
       { src: '/assets/img/pexels-anntarazevich-6036020.webp', alt: 'Calda de chocolate sendo derramada', price: 'R$ 21,00' },
@@ -3256,6 +3259,7 @@ const LANDING_V2_STEPS = [
     title: 'Monte',
     accent: 'suas receitas',
     text: 'Utilize as bases para saber o custo real e a precificação de cada receita.',
+    word: 'receitas',
     photos: [
       { src: '/assets/img/pexels-amar-9329437.webp', alt: 'Doces prontos para servir', price: 'R$ 12,50' },
       { src: '/assets/img/pexels-anntarazevich-6035994.webp', alt: 'Confeiteira preparando uma receita', price: 'R$ 34,00' },
@@ -3266,6 +3270,7 @@ const LANDING_V2_STEPS = [
     title: 'Veja o preço',
     accent: 'sugerido',
     text: 'Com a margem de lucro que você escolher, calculado na hora, sem planilha.',
+    word: 'preço certo',
     photos: [
       { src: '/assets/img/pexels-anntarazevich-6036020.webp', alt: 'Calda de chocolate sendo derramada', price: 'R$ 8,90' },
       { src: '/assets/img/pexels-handmrts-19347074.webp', alt: 'Vitrine com doces prontos para venda', price: 'R$ 21,00' },
@@ -3276,6 +3281,7 @@ const LANDING_V2_STEPS = [
     title: 'Vitrine',
     accent: 'atualizada',
     text: 'Suas receitas sempre atualizadas na sua vitrine de forma automática.',
+    word: 'vitrine',
     photos: [
       { src: '/assets/img/pexels-handmrts-19347074.webp', alt: 'Vitrine com doces prontos para venda', price: 'R$ 16,00' },
       { src: '/assets/img/pexels-amar-9329437.webp', alt: 'Doces prontos para servir', price: 'R$ 25,00' },
@@ -3332,15 +3338,18 @@ function landingV2Steps() {
         <p class="eyebrow-pill reveal">Como funciona</p>
         <h2 class="reveal" style="--reveal-delay: 0.1s">Do ingrediente<br /><em class="accent-tone">à precificação certa</em></h2>
       </div>
-      ${LANDING_V2_STEPS.map((step, i) => `
+      ${LANDING_V2_STEPS.map((step, i) => {
+        const dir = i % 2 === 1 ? 'reveal-right' : 'reveal-left';
+        return `
         <div class="landing-v2-step ${i % 2 === 1 ? 'is-flipped' : ''}">
+          <span class="landing-v2-step-word" aria-hidden="true">${escapeHtml(step.word)}</span>
           <div class="landing-section-inner landing-v2-step-inner">
             <div class="landing-v2-step-copy">
-              <div class="landing-v2-step-heading reveal ${i % 2 === 1 ? 'reveal-right' : 'reveal-left'}">
-                <span class="landing-v2-step-num">${escapeHtml(step.num)}</span>
-                <h3>${escapeHtml(step.title)}<br /><em>${escapeHtml(step.accent)}</em></h3>
+              <div class="landing-v2-step-heading">
+                <span class="landing-v2-step-num reveal ${dir}">${escapeHtml(step.num)}</span>
+                <h3 class="reveal ${dir}" style="--reveal-delay: 0.12s">${escapeHtml(step.title)}<br /><em>${escapeHtml(step.accent)}</em></h3>
               </div>
-              <p class="reveal" style="--reveal-delay: 0.18s">${escapeHtml(step.text)}</p>
+              <p class="reveal" style="--reveal-delay: 0.26s">${escapeHtml(step.text)}</p>
             </div>
             <div class="landing-v2-step-photos">
               ${step.photos.map((photo, j) => `
@@ -3352,8 +3361,45 @@ function landingV2Steps() {
                 </div>`).join('')}
             </div>
           </div>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </section>`;
+}
+
+// Footer V2 (só na #/lp2): CTA de cadastro + barra de links num único bloco
+// rosa que fica fixo ATRÁS da página e vai sendo revelado conforme o
+// conteúdo termina — truque do clip-path no wrapper: clip-path não cria
+// containing block, então o filho position: fixed continua preso à
+// viewport, mas só pinta dentro do retângulo do wrapper (que está no fim
+// do documento). Um filho fixo não estica o pai, então a altura do wrapper
+// é sincronizada por JS com a altura real do conteúdo (syncLandingV2Footer).
+function landingV2Footer() {
+  const year = new Date().getFullYear();
+  return `
+    <div class="landing-v2-footer">
+      <footer class="landing-v2-footer-fixed">
+        <div class="landing-v2-footer-cta">
+          <h2>Ainda adivinhando preço?<br /><em>Deixe sua confeitaria inteligente!</em></h2>
+          <button type="button" data-action="goto" data-route="cadastro">Começar grátis</button>
+          <svg class="landing-v2-footer-arrow" viewBox="0 0 44 30" fill="none" aria-hidden="true">
+            <path d="M38 4c-4 12-16 20-30 16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+            <path d="M15 13l-7 7 9 3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
+        <div class="landing-v2-footer-bar">
+          <span>&copy; ${year} SweetHub. Todos os direitos reservados.</span>
+          <nav class="landing-v2-footer-links">
+            <button type="button" data-action="goto" data-route="termos">Termos de uso</button>
+            <button type="button" data-action="goto" data-route="privacidade">Política de privacidade</button>
+          </nav>
+          <div class="landing-v2-footer-social">
+            <span aria-label="Instagram">${icon('instagram')}</span>
+            <span aria-label="Facebook">${icon('facebook')}</span>
+          </div>
+          <span>Powered by: <strong>Gravit</strong></span>
+        </div>
+      </footer>
+    </div>`;
 }
 
 function landingV2Html() {
@@ -3365,8 +3411,7 @@ function landingV2Html() {
       ${landingV2Steps()}
       ${landingFeaturePanel()}
       ${landingPlansSection()}
-      ${landingFinalCtaSection()}
-      ${siteFooter()}
+      ${landingV2Footer()}
     </div>
     ${cookieBar()}`;
 }
@@ -3948,6 +3993,7 @@ function setupScrollReveal() {
   });
   updateStepsBigPhoto();
   updateLandingV2Parallax();
+  syncLandingV2Footer();
 }
 
 // "Como funciona" fica fixa na tela (position: sticky) enquanto a pista alta
@@ -3992,6 +4038,19 @@ function updateStepsBigPhoto() {
     el.classList.toggle('is-active', Number(el.dataset.step) <= stepIndex);
   });
 }
+
+// O rodapé da V2 é um filho position: fixed dentro de um wrapper com
+// clip-path (efeito cortina, ver landingV2Footer) — fixo não estica o pai,
+// então o wrapper precisa ganhar a altura real do conteúdo via JS, senão a
+// página termina sem o espaço do footer e ele nunca é revelado.
+function syncLandingV2Footer() {
+  const wrap = app.querySelector('.landing-v2-footer');
+  const inner = wrap?.querySelector('.landing-v2-footer-fixed');
+  if (!wrap || !inner) return;
+  wrap.style.height = `${inner.offsetHeight}px`;
+}
+
+window.addEventListener('resize', () => syncLandingV2Footer());
 
 // Parallax do texto nos passos da landing V2 (#/lp2): o bloco de texto é
 // sticky (fica preso enquanto a seção de 150vh rola por baixo) e ainda

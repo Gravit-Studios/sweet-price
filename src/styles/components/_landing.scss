@@ -1405,11 +1405,11 @@
 // de baixo) — o mesmo observer adiciona .is-visible, e .reveal.is-visible
 // (duas classes) ganha destas (uma classe) pra zerar o transform no final.
 .reveal-left {
-  transform: translateX(-44px);
+  transform: translateX(-70px);
 }
 
 .reveal-right {
-  transform: translateX(44px);
+  transform: translateX(70px);
 }
 
 .reveal-scale {
@@ -1597,12 +1597,17 @@
   }
 }
 
-// Pista mais alta que a tela (150vh): o texto fica sticky (preso, centrado
+// Pista mais alta que a tela (140vh): o texto fica sticky (preso, centrado
 // verticalmente) enquanto a coluna de fotos rola por baixo dele — a
 // diferença de velocidade entre os dois é o parallax; o JS ainda soma uma
 // deriva lenta no próprio texto (ver updateLandingV2Parallax em main.js).
+// position: relative por causa da palavra gigante de fundo
+// (.landing-v2-step-word) — sem overflow: hidden aqui de propósito: virar
+// scroll container quebraria o sticky do texto; o transbordo horizontal da
+// palavra já é cortado pelo overflow-x: clip do body.
 .landing-v2-step {
-  min-height: 150vh;
+  position: relative;
+  min-height: 140vh;
   display: flex;
   align-items: stretch;
 
@@ -1612,9 +1617,29 @@
   }
 }
 
+// Textura de fundo tipográfica: uma palavra de confeitaria gigante, serifada
+// e quase transparente atrás de cada passo (bem suave, decorativa).
+.landing-v2-step-word {
+  position: absolute;
+  top: 16%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: $font-heading;
+  font-style: italic;
+  font-size: clamp(6rem, 17vw, 15rem);
+  line-height: 1;
+  white-space: nowrap;
+  color: rgba(var(--primary-600-rgb), 0.05);
+  pointer-events: none;
+  user-select: none;
+}
+
 // Largura/centralização vêm do .landing-section-inner no mesmo elemento —
-// aqui só o grid de duas colunas.
+// aqui só o grid de duas colunas (acima da palavra de fundo).
 .landing-v2-step-inner {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: clamp(32px, 6vw, 80px);
@@ -1626,9 +1651,12 @@
   }
 }
 
+// z-index: 1 porque as fotos maiores invadem a coluna do texto (ver width/
+// margens negativas em .landing-v2-step-photos) — o texto fica por cima.
 .landing-v2-step-copy {
   position: sticky;
   top: 0;
+  z-index: 1;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -1697,18 +1725,33 @@
 }
 
 // Coluna (não linha): com o texto sticky ao lado, as fotos maiores entram
-// uma por vez de baixo pra cima conforme a seção rola — o padding-top alto
-// faz a primeira foto só aparecer depois que o texto já está preso.
+// uma por vez de baixo pra cima conforme a seção rola. A coluna é mais
+// larga que a célula do grid (width 120% + margem negativa pro lado do
+// texto): as fotos grandonas invadem parcialmente a coluna do texto,
+// passando POR TRÁS dele (copy tem z-index maior).
 .landing-v2-step-photos {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: clamp(32px, 6vh, 64px);
-  padding: 32vh 0 12vh;
+  padding: 8vh 0 12vh;
+  width: 120%;
+  margin-left: -20%;
 
   @include respond-down($bp-tablet) {
     padding: 0;
     gap: 28px;
+    width: 100%;
+    margin: 0;
+  }
+}
+
+.landing-v2-step.is-flipped .landing-v2-step-photos {
+  margin-left: 0;
+  margin-right: -20%;
+
+  @include respond-down($bp-tablet) {
+    margin: 0;
   }
 }
 
@@ -1716,7 +1759,7 @@
 // anima transform, e os dois no mesmo elemento se sobrescreveriam. Nos
 // passos invertidos (.is-flipped) a diagonal espelha.
 .landing-v2-photo-card {
-  width: clamp(220px, 24vw, 380px);
+  width: clamp(250px, 28vw, 460px);
   flex-shrink: 0;
 
   &:nth-child(2) {
@@ -1778,5 +1821,124 @@
 @media (prefers-reduced-motion: reduce) {
   .landing-v2-photo-bob {
     animation: none;
+  }
+}
+
+// Footer V2 (efeito cortina, ver landingV2Footer em main.js): o wrapper com
+// clip-path recorta o filho fixo — clip-path não cria containing block,
+// então o footer continua preso à viewport, mas só pinta dentro do
+// retângulo do wrapper no fim do documento: chegar ao final da página
+// "revela" o footer parado atrás do conteúdo. A altura do wrapper vem do
+// JS (syncLandingV2Footer).
+.landing-v2-footer {
+  position: relative;
+  clip-path: inset(0 0 0 0);
+}
+
+.landing-v2-footer-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: $primary-600;
+  color: $white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(48px, 8vh, 96px);
+  padding: clamp(72px, 12vh, 140px) 24px clamp(28px, 4vh, 44px);
+}
+
+.landing-v2-footer-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  text-align: center;
+
+  h2 {
+    color: $white;
+    font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+    line-height: 1.2;
+  }
+
+  button {
+    background: $white;
+    color: $primary-600;
+
+    &:hover {
+      filter: brightness(0.95);
+    }
+  }
+}
+
+.landing-v2-footer-arrow {
+  width: 44px;
+  height: 30px;
+  color: $white;
+  margin-top: -12px;
+  align-self: center;
+  transform: translateX(26px);
+}
+
+.landing-v2-footer-bar {
+  width: min(1200px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+  font-size: $fs-sm;
+  color: rgba(var(--white-rgb), 0.88);
+
+  strong {
+    color: $white;
+  }
+
+  button {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+    font-weight: $fw-medium;
+
+    &:hover {
+      box-shadow: none;
+      transform: none;
+      color: $white;
+      text-decoration: underline;
+    }
+  }
+
+  @include respond-down($bp-tablet) {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+.landing-v2-footer-links {
+  display: flex;
+  gap: 26px;
+}
+
+.landing-v2-footer-social {
+  display: flex;
+  gap: 10px;
+
+  span {
+    width: 34px;
+    height: 34px;
+    border-radius: $radius-pill;
+    background: $white;
+    color: $primary-600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
   }
 }
