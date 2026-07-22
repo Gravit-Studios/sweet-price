@@ -3305,13 +3305,16 @@ function landingV2Hero() {
         </h1>
         <p class="landing-v2-hero-subtitle reveal" style="--reveal-delay: 0.12s">A gestão da sua confeitaria de forma inteligente e integrada com a sua vitrine</p>
         <div class="landing-hero-actions reveal" style="--reveal-delay: 0.24s">
-          <button type="button" class="landing-v2-cta-solid" data-action="goto" data-route="cadastro">Começar grátis</button>
-          <a href="#precos" class="landing-v2-cta-outline">Ver planos e preços</a>
+          <span class="landing-v2-cta-solid-wrap">
+            <button type="button" class="landing-v2-cta-solid" data-action="goto" data-route="cadastro">Começar grátis</button>
+            <img src="/assets/icons/seta-curva.png" alt="" class="landing-v2-cta-arrow" />
+          </span>
+          <a href="#precos" class="landing-v2-cta-text">Ver planos e preços</a>
         </div>
         <p class="landing-v2-hero-note reveal" style="--reveal-delay: 0.34s">Sem cartão de crédito para começar. Cancele quando quiser.</p>
       </div>
       <div class="landing-v2-hero-chips reveal" style="--reveal-delay: 0.44s">
-        ${LANDING_HIGHLIGHTS.map((h) => `<span class="landing-v2-hero-chip">${escapeHtml(h.text)}</span>`).join('')}
+        ${LANDING_HIGHLIGHTS.map((h) => `<span class="landing-v2-hero-chip"><img src="${h.icon}" alt="" class="landing-v2-hero-chip-icon" />${escapeHtml(h.text)}</span>`).join('')}
       </div>
     </section>`;
 }
@@ -3327,7 +3330,7 @@ function landingV2Benefits() {
         </h2>
         <div class="landing-v2-benefits-grid">
           ${LANDING_BENEFITS.map((b, index) => `
-            <div class="landing-v2-benefit-card reveal" style="--reveal-delay: ${(index * 0.08).toFixed(2)}s">
+            <div class="landing-v2-benefit-card reveal reveal-soft" style="--reveal-delay: ${(index * 0.14).toFixed(2)}s">
               <h3>${escapeHtml(b.title)}</h3>
               <p>${escapeHtml(b.text)}</p>
             </div>`).join('')}
@@ -3394,11 +3397,10 @@ function landingV2Footer() {
       <footer class="landing-v2-footer-fixed">
         <div class="landing-v2-footer-cta">
           <h2>Ainda adivinhando preço?<br /><em>Deixe sua confeitaria inteligente!</em></h2>
-          <button type="button" data-action="goto" data-route="cadastro">Começar grátis</button>
-          <svg class="landing-v2-footer-arrow" viewBox="0 0 44 30" fill="none" aria-hidden="true">
-            <path d="M38 4c-4 12-16 20-30 16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-            <path d="M15 13l-7 7 9 3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <span class="landing-v2-cta-solid-wrap">
+            <button type="button" data-action="goto" data-route="cadastro">Começar grátis</button>
+            <img src="/assets/icons/seta-curva.png" alt="" class="landing-v2-cta-arrow landing-v2-footer-arrow" />
+          </span>
         </div>
         <div class="landing-v2-footer-bar">
           <span>&copy; ${year} SweetHub. Todos os direitos reservados.</span>
@@ -4066,40 +4068,11 @@ function syncLandingV2Footer() {
 
 window.addEventListener('resize', () => syncLandingV2Footer());
 
-// Parallax do texto nos passos da landing V2 (#/lp2): o bloco de texto é
-// sticky (fica preso enquanto a seção de 150vh rola por baixo) e ainda
-// deriva devagar no sentido contrário do scroll — a diferença de velocidade
-// entre ele e as fotos subindo é o efeito pedido. Só no desktop (no mobile
-// o sticky é desligado no CSS e a deriva ficaria estranha) e nunca com
-// preferência por movimento reduzido.
-function updateLandingV2Parallax() {
-  const steps = app.querySelectorAll('.landing-v2-step');
-  if (!steps.length) return;
-  const disabled = window.innerWidth <= 900
-    || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  steps.forEach((step) => {
-    const copy = step.querySelector('.landing-v2-step-copy');
-    if (!copy) return;
-    // Se a tela virou mobile (ou movimento reduzido) no meio do caminho,
-    // zera a deriva — sem isso o último translateY ficava congelado no
-    // layout empilhado, onde o sticky já nem existe.
-    if (disabled) {
-      copy.style.transform = '';
-      return;
-    }
-    const rect = step.getBoundingClientRect();
-    const total = rect.height + window.innerHeight;
-    const progress = Math.min(1, Math.max(0, (window.innerHeight - rect.top) / total));
-    copy.style.transform = `translateY(${((0.5 - progress) * 110).toFixed(1)}px)`;
-  });
-}
-
 window.addEventListener('scroll', () => {
   if (stepsPhotoRaf) return;
   stepsPhotoRaf = requestAnimationFrame(() => {
     stepsPhotoRaf = null;
     updateStepsBigPhoto();
-    updateLandingV2Parallax();
   });
 }, { passive: true });
 

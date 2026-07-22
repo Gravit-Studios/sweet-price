@@ -1416,6 +1416,15 @@
   transform: translateY(26px) scale(0.9);
 }
 
+// Entrada mais suave e mais lenta (cartões de benefícios): sobe menos e com
+// leve escala, mas com duração bem maior que o .reveal padrão — reforça a
+// sensação de "um card de cada vez" em vez de todos entrando juntos rápido.
+.reveal-soft {
+  transform: translateY(18px) scale(0.96);
+  transition-duration: 0.9s, 0.9s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .landing-v2-hero {
   position: relative;
   overflow: hidden;
@@ -1489,20 +1498,50 @@
   }
 }
 
-.landing-v2-cta-outline {
+// Link "Ver planos e preços": texto simples sublinhado (não mais botão
+// contornado) — semibold, sublinhado sempre visível.
+.landing-v2-cta-text {
   display: inline-flex;
   align-items: center;
-  padding: 0.6rem 1rem;
-  border: 1px solid rgba(var(--white-rgb), 0.7);
-  border-radius: $radius-sm;
   color: $white;
   font-weight: $fw-bold;
-  font-size: 0.9rem;
-  text-decoration: none;
-  transition: background 0.15s ease;
+  font-size: 0.95rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 
   &:hover {
-    background: rgba(var(--white-rgb), 0.12);
+    opacity: 0.85;
+  }
+}
+
+// Envolve o CTA sólido (hero ou footer) + a setinha de "clique aqui" ao
+// lado (ver seta-curva.png) — a seta baloiça devagar num loop contínuo,
+// só reforçando que o botão é clicável, sem exigir hover.
+.landing-v2-cta-solid-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.landing-v2-cta-arrow {
+  width: 34px;
+  height: 34px;
+  margin-left: 4px;
+  animation: landing-v2-arrow-nudge 1.8s ease-in-out infinite;
+
+  @include respond-down($bp-tablet) {
+    display: none;
+  }
+}
+
+@keyframes landing-v2-arrow-nudge {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(4px, -4px) rotate(6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-v2-cta-arrow {
+    animation: none;
   }
 }
 
@@ -1518,6 +1557,9 @@
 }
 
 .landing-v2-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 20px;
   border: 1px solid rgba(var(--white-rgb), 0.55);
   border-radius: $radius-pill;
@@ -1525,6 +1567,12 @@
   font-size: $fs-sm;
   font-weight: $fw-medium;
   white-space: nowrap;
+}
+
+.landing-v2-hero-chip-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 // Benefícios V2: fundo claro, cartões rosa suave com título rosa em sans
@@ -1553,7 +1601,11 @@
   background: rgba(var(--primary-500-rgb), 0.07);
   border: 1px solid rgba(var(--primary-500-rgb), 0.16);
   border-radius: $radius-lg;
-  padding: 24px;
+  padding: 32px 28px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   transition: transform 0.25s ease, border-color 0.25s ease;
 
   h3 {
@@ -1597,23 +1649,21 @@
   }
 }
 
-// Pista mais alta que a tela (140vh): o texto fica sticky (preso, centrado
-// verticalmente) enquanto a coluna de fotos rola por baixo dele — a
-// diferença de velocidade entre os dois é o parallax; o JS ainda soma uma
-// deriva lenta no próprio texto (ver updateLandingV2Parallax em main.js).
-// position: relative por causa da palavra gigante de fundo
-// (.landing-v2-step-word) — sem overflow: hidden aqui de propósito: virar
-// scroll container quebraria o sticky do texto; o transbordo horizontal da
-// palavra já é cortado pelo overflow-x: clip do body.
+// Fluxo normal (não é mais um passo por altura de tela) — só um espaço
+// generoso entre um passo e o próximo. position: relative por causa da
+// palavra gigante de fundo (.landing-v2-step-word).
 .landing-v2-step {
   position: relative;
-  min-height: 140vh;
-  display: flex;
-  align-items: stretch;
+  padding: 24px 0;
+  margin-bottom: 132px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 
   @include respond-down($bp-tablet) {
-    min-height: auto;
-    padding: 56px 0;
+    margin-bottom: 64px;
+    padding: 0;
   }
 }
 
@@ -1654,20 +1704,8 @@
 // z-index: 1 porque as fotos maiores invadem a coluna do texto (ver width/
 // margens negativas em .landing-v2-step-photos) — o texto fica por cima.
 .landing-v2-step-copy {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 1;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  will-change: transform;
-
-  @include respond-down($bp-tablet) {
-    position: static;
-    min-height: auto;
-    display: block;
-  }
 }
 
 .landing-v2-step.is-flipped .landing-v2-step-inner {
@@ -1700,6 +1738,9 @@
   display: block;
 }
 
+// Cor padrão (fundos claros): cor primária. Sobre fundos coloridos (hero
+// rosa) vira branco translúcido, ver override abaixo — sem isso o
+// sublinhado primário sumiria dentro do próprio rosa do fundo.
 .landing-v2-underline {
   position: relative;
   z-index: 0;
@@ -1711,10 +1752,10 @@
     right: 0;
     bottom: 0.02em;
     height: 0.16em;
-    background: rgba(var(--ink-900-rgb), 0.12);
+    background: rgba(var(--primary-500-rgb), 0.32);
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.5s;
+    transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.5s;
     z-index: -1;
   }
 }
@@ -1723,9 +1764,10 @@
   transform: scaleX(1);
 }
 
-// Sobre o hero rosa o sublinhado cinza sumiria — versão clara translúcida.
+// Sobre fundos coloridos (hero rosa) o sublinhado primário sumiria —
+// versão branca translúcida.
 .landing-v2-hero .landing-v2-underline::after {
-  background: rgba(var(--white-rgb), 0.35);
+  background: rgba(var(--white-rgb), 0.4);
 }
 
 // Cabeçalho do passo: número grande rosa-clarinho itálico ACIMA do título
@@ -1920,12 +1962,8 @@
 }
 
 .landing-v2-footer-arrow {
-  width: 44px;
-  height: 30px;
-  color: $white;
-  margin-top: -12px;
-  align-self: center;
-  transform: translateX(26px);
+  width: 40px;
+  height: 40px;
 }
 
 .landing-v2-footer-bar {
