@@ -124,7 +124,10 @@ export async function uploadCompanyLogo(userId, file) {
   const extension = file.name.split('.').pop() || 'jpg';
   const path = `${userId}/logo-${crypto.randomUUID()}.${extension}`;
   const { error } = await supabase.storage.from('product-photos').upload(path, file, {
-    cacheControl: '3600',
+    // 1 ano: cada upload gera um nome novo (crypto.randomUUID(), upsert:
+    // false) — nunca sobrescreve, então cache longo é seguro, sem risco de
+    // servir uma foto desatualizada.
+    cacheControl: '31536000',
     upsert: false,
   });
   if (error) throw error;
@@ -251,7 +254,10 @@ export async function uploadProductPhoto(userId, file) {
   const extension = file.name.split('.').pop() || 'jpg';
   const path = `${userId}/${crypto.randomUUID()}.${extension}`;
   const { error } = await supabase.storage.from('product-photos').upload(path, file, {
-    cacheControl: '3600',
+    // 1 ano: cada upload gera um nome novo (crypto.randomUUID(), upsert:
+    // false) — nunca sobrescreve, então cache longo é seguro, sem risco de
+    // servir uma foto desatualizada.
+    cacheControl: '31536000',
     upsert: false,
   });
   if (error) throw error;
