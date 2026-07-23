@@ -23,14 +23,14 @@
 .navbar-inner {
   width: min(1200px, 100%);
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 22px 32px;
   display: flex;
   align-items: center;
   gap: 16px;
   position: relative;
 
   @include respond-down($bp-tablet) {
-    padding: 12px 16px;
+    padding: 16px 20px;
   }
 }
 
