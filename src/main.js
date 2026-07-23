@@ -2848,41 +2848,6 @@ const LANDING_BENEFITS = [
   { icon: 'storefront', title: 'Vitrine para seus clientes', text: 'Publique suas receitas numa vitrine online, sempre atualizada e pronta pra compartilhar.' },
 ];
 
-// Seção "Como funciona": lista editorial de passos com números grandes
-// (ver landingStepsBigSection).
-const LANDING_STEPS_BIG = [
-  {
-    num: '01',
-    label: 'Cadastre ingredientes e despesas',
-    text: 'Preço de compra, quantidade e as despesas fixas do seu negócio — uma vez só, tudo num lugar.',
-  },
-  {
-    num: '02',
-    label: 'Monte suas receitas',
-    text: 'Utilize as bases para saber o custo real e precificação de cada receita.',
-  },
-  {
-    num: '03',
-    label: 'Veja o preço sugerido',
-    text: 'Com a margem de lucro que você escolher, calculado na hora, sem planilha.',
-  },
-  {
-    num: '04',
-    label: 'Vitrine atualizada',
-    text: 'Suas receitas sempre atualizadas na sua vitrine de forma automática.',
-  },
-];
-
-// Uma foto por passo — troca e desce um pouco conforme o scroll (ver
-// updateStepsBigPhoto), pra dar mais movimento à seção sem reintroduzir o
-// scroll pinado inteiro (abas/mockup) que a seção tinha antes.
-const LANDING_STEPS_BIG_PHOTOS = [
-  { src: '/assets/img/pexels-anntarazevich-6035994.webp', alt: 'Confeiteira preparando uma receita' },
-  { src: '/assets/img/pexels-anntarazevich-6036020.webp', alt: 'Calda de chocolate sendo derramada' },
-  { src: '/assets/img/pexels-amar-9329437.webp', alt: 'Doces prontos para servir' },
-  { src: '/assets/img/pexels-handmrts-19347074.webp', alt: 'Vitrine com doces prontos para venda' },
-];
-
 // Gratuito é permanente, sem cartão (ver planStatus/planLimits.js) — por
 // isso vira o primeiro cartão em vez de um "teste" à parte. Controle e
 // Vitrine são o antigo "Pro" dividido em dois: Vitrine é tudo do Controle +
@@ -3006,83 +2971,6 @@ function fauxWindow(bodyHtml) {
     </div>`;
 }
 
-// "Como funciona": lista editorial com números grandes (estilo textos
-// grandes sobrepostos de referência) — a foto de destaque troca e desce
-// aos poucos conforme o scroll (ver updateStepsBigPhoto), o resto da seção
-// não depende de scroll pinado. A altura da pista soma +100vh à distância
-// que se quer de fato rolar com o conteúdo preso: o painel sticky (que
-// ocupa ~100vh) "gasta" essa altura da pista só ficando parado antes de
-// soltar, então sem esse extra o pin soltava bem antes do scroll acabar.
-function landingStepsBigSection() {
-  return `
-    <section class="landing-steps-big" id="como-funciona">
-      <div class="landing-steps-big-track" style="height: calc(${LANDING_STEPS_BIG.length * 90}vh + 100vh)">
-        <div class="landing-steps-big-sticky">
-          <div class="landing-section-inner landing-steps-big-stack">
-            <p class="eyebrow-pill">Como funciona</p>
-            <h2>Do ingrediente à precificação certa</h2>
-            <div class="landing-steps-big-photo">
-              ${LANDING_STEPS_BIG_PHOTOS.map((photo, i) => `
-                <div class="landing-steps-big-photo-item ${i === 0 ? 'is-active' : ''}" data-step="${i}">
-                  <img src="${photo.src}" alt="${escapeHtml(photo.alt)}" />
-                </div>`).join('')}
-            </div>
-            ${LANDING_STEPS_BIG.map((step, i) => `
-              <div class="landing-steps-big-row ${i === 0 ? 'is-active' : ''}" data-step="${i}">
-                <span class="landing-steps-big-num">${escapeHtml(step.num)}</span>
-                <div class="landing-steps-big-text">
-                  <h3>${escapeHtml(step.label)}</h3>
-                  <p>${escapeHtml(step.text)}</p>
-                </div>
-              </div>`).join('')}
-          </div>
-        </div>
-      </div>
-    </section>`;
-}
-
-// Hero: foto full-bleed (degradê já vem na própria imagem, escurecendo a
-// esquerda onde fica o texto) com o mockup fake da tela de precificação
-// flutuando à direita, cercado de cartõezinhos (depoimento/métrica/selo) com
-// leve animação contínua (CSS). A faixa de destaques fecha o rodapé da foto.
-function landingHeroV2() {
-  return `
-    <section class="landing-hero-v2">
-      <img src="/assets/background/bg-banner-02.webp" alt="" class="landing-hero-v2-photo" />
-      <div class="landing-section-inner landing-hero-v2-inner">
-        <div class="landing-hero-v2-copy">
-          <p class="eyebrow-pill">Facilite a gestão da sua confeitaria</p>
-          <h1>Sua confeitaria <em>no lucro certo</em></h1>
-          <p class="landing-hero-v2-subtitle">A gestão da sua confeitaria de forma inteligente e integrada com a sua vitrine</p>
-          <div class="landing-hero-actions">
-            <button type="button" data-action="goto" data-route="cadastro">Começar grátis</button>
-            <a href="#precos" class="landing-link-cta">Ver planos e preços</a>
-          </div>
-          <p class="landing-hero-note">Sem cartão de crédito para começar. Cancele quando quiser.</p>
-        </div>
-        <div class="landing-hero-v2-stage">
-          <div class="landing-hero-floater landing-hero-floater-1">
-            <span class="landing-hero-floater-avatar" style="background:${avatarColorFor('Marina Duarte')}">MD</span>
-            <div><strong>Marina Duarte</strong><small>Doce Ponto Confeitaria</small></div>
-          </div>
-          ${fauxWindow(`
-            <div class="faux-meta faux-meta-highlight"><span>Custo por unidade</span><strong>R$ 2,10</strong></div>
-            <div class="faux-tier"><span>Mínimo</span><strong>R$ 4,90</strong></div>
-            <div class="faux-tier is-active"><span>Média</span><strong>R$ 6,90</strong></div>
-            <div class="faux-tier"><span>Máximo</span><strong>R$ 8,90</strong></div>
-          `)}
-          <div class="landing-hero-floater landing-hero-floater-2">
-            ${icon('trending')}<div><strong>+28%</strong><small>de margem média</small></div>
-          </div>
-          <div class="landing-hero-floater landing-hero-floater-3">
-            ${icon('check')}<div><strong>Margem garantida</strong><small>em cada receita</small></div>
-          </div>
-        </div>
-      </div>
-      ${landingHighlightsStrip()}
-    </section>`;
-}
-
 // Painel escuro full-bleed com foto + cartões flutuantes de recursos —
 // reforça a praticidade do dia a dia (mesmo tratamento visual da referência
 // usada, seção "Endless Workout Options").
@@ -3119,18 +3007,7 @@ const LANDING_HIGHLIGHTS = [
   { icon: '/assets/icons/gestao.png', text: 'Gestão da sua confeitaria' },
 ];
 
-function landingHighlightsStrip() {
-  return `
-    <div class="landing-highlights">
-      <div class="landing-section-inner landing-highlights-inner">
-        ${LANDING_HIGHLIGHTS.map((h) => `
-          <div class="landing-highlight"><img src="${h.icon}" alt="" class="landing-highlight-icon" /><span>${escapeHtml(h.text)}</span></div>`).join('')}
-      </div>
-    </div>`;
-}
-
-// Planos e CTA final viraram funções próprias pra serem reaproveitados
-// entre a landing atual e a versão 2 em teste (ver landingV2Html) sem
+// Planos viraram função própria (compartilhada com landingV2Html) pra não
 // duplicar os ~60 blocos de template.
 function landingPlansSection() {
   return `
@@ -3169,69 +3046,13 @@ function landingPlansSection() {
     </section>`;
 }
 
-function landingFinalCtaSection() {
-  return `
-    <section class="landing-final-cta reveal">
-      <img src="/assets/img/banner-cadastro.webp" alt="" class="landing-final-cta-photo" />
-      <div class="landing-final-cta-overlay"></div>
-      <div class="landing-final-cta-badge" aria-hidden="true">
-        <svg viewBox="0 0 200 200">
-          <path id="landingFinalCtaCirclePath" fill="none" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"></path>
-          <text><textPath href="#landingFinalCtaCirclePath">CRIE SUA CONTA · GRÁTIS PRA SEMPRE · </textPath></text>
-        </svg>
-        <span class="landing-final-cta-badge-icon">${icon('arrowUpRight')}</span>
-      </div>
-      <div class="landing-section-inner landing-final-cta-inner">
-        <h2>Ainda adivinhando preço?<br /><em>Deixe sua confeitaria inteligente!</em></h2>
-        <button type="button" data-action="goto" data-route="cadastro">Criar conta ${icon('arrow')}</button>
-      </div>
-    </section>`;
-}
-
-function landingHtml() {
-  return `
-    <div class="landing">
-      ${landingNav(true)}
-      ${landingHeroV2()}
-
-      <section class="landing-section landing-section-dark" id="beneficios">
-        <div class="landing-section-inner">
-          <p class="eyebrow-pill">Benefícios</p>
-          <h2>A gestão inteligente que sua confeitaria precisa</h2>
-          <div class="landing-benefits-grid">
-            ${LANDING_BENEFITS.map((b, index) => `
-              <div class="landing-benefit-card reveal" style="--reveal-delay: ${(index * 0.08).toFixed(2)}s">
-                <div class="landing-benefit-top">
-                  <span class="landing-benefit-icon">${icon(b.icon)}</span>
-                  <span class="landing-benefit-arrow">${icon('arrowUpRight')}</span>
-                </div>
-                <h3>${escapeHtml(b.title)}</h3>
-                <p>${escapeHtml(b.text)}</p>
-              </div>`).join('')}
-          </div>
-        </div>
-      </section>
-
-      ${landingStepsBigSection()}
-
-      ${landingFeaturePanel()}
-
-      ${landingPlansSection()}
-
-      ${landingFinalCtaSection()}
-
-      ${siteFooter()}
-    </div>
-    ${cookieBar()}`;
-}
-
-// ---------------- Landing V2 (em teste, rota #/lp2) ----------------
-// Segunda versão da landing pra teste A/B manual: hero rosa sólido com
-// texto centralizado, benefícios em cartões claros e "Como funciona" com
-// um passo por seção de altura cheia, com fotos + etiqueta de preço
-// simulando produtos sendo cadastrados. Planos, painel de praticidade,
-// CTA final e footer são os mesmos da landing atual (funções
-// compartilhadas) — footer muda depois, a pedido.
+// ---------------- Landing page pública (vendas) ----------------
+// Hero rosa sólido com texto centralizado, benefícios em cartões claros e
+// "Como funciona" com um passo por seção de altura cheia, com fotos +
+// etiqueta de preço simulando produtos sendo cadastrados. Planos e painel
+// de praticidade são funções próprias (landingPlansSection/
+// landingFeaturePanel), compartilhadas com o antigo layout enquanto ele
+// ainda existia — mantidas com esse nome pra não precisar renomear tudo.
 
 // Cada passo: título quebrado em parte normal + parte de destaque (rosa,
 // itálico serifado), e 2 fotos com etiqueta de preço penduradas ao lado.
@@ -3730,7 +3551,7 @@ function publicHtml() {
   if (state.route.path === 'termos') return publicPageHtml(renderTermosPage());
   if (state.route.path === 'privacidade') return publicPageHtml(renderPrivacidadePage());
   if (state.route.path === 'assinatura') return publicPageHtml(renderAssinaturaRetornoPage());
-  return landingHtml();
+  return landingV2Html();
 }
 
 // Volta do checkout do Mercado Pago (back_url = #/assinatura/retorno). Quem
@@ -4025,19 +3846,16 @@ function render() {
   lastPageKey = pageKey;
   // O cardápio público é sempre a mesma página, esteja o visitante logado
   // ou não (ex.: o próprio lojista pré-visualizando o link) — por isso vem
-  // antes do shellHtml()/publicHtml() de sempre. Idem #/lp2: a landing V2
-  // em teste, acessível também logado pra facilitar a comparação.
+  // antes do shellHtml()/publicHtml() de sempre.
   app.innerHTML = state.passwordRecovery
     ? passwordRecoveryHtml()
     : state.route.path === 'cardapio'
       ? publicMenuHtml()
-      : state.route.path === 'lp2'
-        ? landingV2Html()
-        : (state.session ? shellHtml() : publicHtml());
+      : (state.session ? shellHtml() : publicHtml());
   restoreFocus(restore);
   // O primeiro filho é sempre o wrapper principal da página (.shell/.landing/
   // .auth-page/...); os demais irmãos (modal, cookie bar, banner de upgrade)
-  // não devem deslizar junto — ver padrão em shellHtml/landingHtml/authHtml.
+  // não devem deslizar junto — ver padrão em shellHtml/landingV2Html/authHtml.
   if (isNewPage) app.firstElementChild?.classList.add('page-enter');
   setupScrollReveal();
   hydrateInlineSvgs();
@@ -4154,54 +3972,16 @@ function setupScrollReveal() {
   targets.forEach((el) => {
     if (!el.classList.contains('is-visible')) scrollRevealObserver.observe(el);
   });
-  updateStepsBigPhoto();
   updateLandingV2StepWordParallax();
   updateLandingV2PhotoParallax();
   syncLandingV2Footer();
 }
 
-// "Como funciona" fica fixa na tela (position: sticky) enquanto a pista alta
-// (.landing-steps-big-track) rola por baixo — a cada trecho da pista, acende
-// o passo (texto + número) e troca a foto correspondente. Mais leve que o
-// scroll pinado antigo (abas/mockup): é só opacidade + crossfade, sem travar
-// a rolagem de verdade nem exigir JS pra "soltar" o pin. O deslocamento
-// acompanha o scroll 1:1 (só o rAF-throttle abaixo, ~16ms) — um lerp/loop
-// próprio aqui já foi tentado e deixava a foto visivelmente atrasada em
-// relação ao scroll de verdade, o oposto do que se queria.
+// Throttle (rAF, ~16ms) do listener de scroll abaixo, compartilhado pelas
+// atualizações de parallax/footer da landing — um lerp/loop próprio já foi
+// tentado e deixava o movimento visivelmente atrasado em relação ao scroll
+// de verdade, o oposto do que se queria.
 let stepsPhotoRaf = null;
-// Distância percorrida pela foto do início (alinhada ao passo 01) até o fim
-// do scroll (alinhada ao último passo) — recalculada pra bater com a altura
-// real da lista de 4 passos (medida via Playwright), não um valor arbitrário;
-// precisa reajustar se a quantidade de passos ou o texto deles mudar bastante.
-const STEPS_PHOTO_TRAVEL = 422;
-
-function updateStepsBigPhoto() {
-  const track = app.querySelector('.landing-steps-big-track');
-  const sticky = app.querySelector('.landing-steps-big-sticky');
-  const photo = app.querySelector('.landing-steps-big-photo');
-  if (!track || !sticky || !photo) return;
-  const rect = track.getBoundingClientRect();
-  // O quanto o sticky fica realmente preso é (altura da pista - altura do
-  // próprio painel sticky), não a altura da viewport — usar innerHeight aqui
-  // fazia o progresso chegar a 100% bem antes do pin soltar de verdade (foto
-  // "travava" no topo pelo resto do scroll da seção).
-  const total = rect.height - sticky.getBoundingClientRect().height;
-  const progress = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
-  photo.style.transform = `translateY(${(progress * STEPS_PHOTO_TRAVEL).toFixed(1)}px)`;
-  const stepCount = LANDING_STEPS_BIG_PHOTOS.length;
-  const stepIndex = Math.min(stepCount - 1, Math.floor(progress * stepCount));
-  if (photo.dataset.activeStep === String(stepIndex)) return;
-  photo.dataset.activeStep = String(stepIndex);
-  photo.querySelectorAll('[data-step]').forEach((el) => {
-    el.classList.toggle('is-active', Number(el.dataset.step) === stepIndex);
-  });
-  // Passos já vistos ficam acesos (não só o atual) — dá a sensação de ir
-  // "completando" a lista conforme rola, em vez de cada passo apagar de
-  // novo assim que o próximo acende.
-  app.querySelectorAll('.landing-steps-big-row[data-step]').forEach((el) => {
-    el.classList.toggle('is-active', Number(el.dataset.step) <= stepIndex);
-  });
-}
 
 // Parallax da palavra gigante de fundo em cada passo do "Como funciona"
 // (#/lp2, ver .landing-v2-step-word): deriva mais devagar que o scroll
@@ -4290,7 +4070,6 @@ window.addEventListener('scroll', () => {
   if (stepsPhotoRaf) return;
   stepsPhotoRaf = requestAnimationFrame(() => {
     stepsPhotoRaf = null;
-    updateStepsBigPhoto();
     updateLandingV2StepWordParallax();
     updateLandingV2PhotoParallax();
   });
