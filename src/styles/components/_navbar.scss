@@ -437,8 +437,16 @@
   display: none;
   position: fixed;
   inset: 0;
+  // Altura explícita em dvh (com fallback em vh): mais robusto que confiar
+  // só no inset:0 contra a barra de endereço dinâmica de navegadores mobile.
+  height: 100vh;
+  height: 100dvh;
   background: rgba(var(--ink-900-rgb), 0.45);
-  z-index: 40;
+  // Acima da .cookie-bar (z-index: 45, ver _landing.scss) — sem isso a barra
+  // de cookies (fixed, aparece em qualquer página, não só na landing) ficava
+  // por cima do rodapé do drawer (nome/Configurações/Trocar senha/Sair),
+  // escondendo esses itens atrás dela.
+  z-index: 50;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;

@@ -26,8 +26,11 @@
   width: min(1200px, 100%);
   margin: 0 auto;
 
+  // Padding horizontal em % (não px fixo): garante that o conteúdo sempre
+  // ocupa pelo menos 90% da tela no mobile, em vez de uma margem fixa que
+  // fica desproporcional em telas bem estreitas.
   @include respond-down($bp-tablet) {
-    padding: 20px 16px 40px;
+    padding: 20px 5% 40px;
   }
 }
 

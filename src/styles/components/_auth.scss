@@ -10,11 +10,12 @@
 
   // No mobile não há mais coluna de foto ao lado — a foto vira o fundo
   // inteiro da tela (position: fixed em .auth-visual) e o formulário flutua
-  // por cima, como um cartão centralizado.
+  // por cima, como um cartão centralizado. Padding em % (não px fixo):
+  // garante que o cartão ocupe pelo menos 90% da largura da tela.
   @include respond-down($bp-tablet) {
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 5%;
   }
 }
 
@@ -40,6 +41,14 @@
     border-radius: $radius-lg;
     box-shadow: $shadow-lift;
     padding: 32px 24px;
+
+    // .auth-form-side-signup (acima) tem a mesma especificidade (2 classes)
+    // do "flex: none" logo acima — sem essa repetição aqui dentro, o
+    // flex-basis: 62% dela ainda ganhava no mobile, deixando o cartão de
+    // cadastro com só uns 60% da largura da tela em vez de quase inteiro.
+    &.auth-form-side-signup {
+      flex-basis: auto;
+    }
   }
 }
 
@@ -74,6 +83,14 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
+
+    // Sem isso os campos de endereço (Número/Complemento, Cidade/Estado...)
+    // ficavam sempre em 2 colunas mesmo no mobile — essa regra é mais
+    // específica que o .field-grid padrão (ver _pricing-summary.scss) e
+    // sobrescrevia o empilhamento em 1 coluna que ele já tem lá.
+    @include respond-down($bp-tablet) {
+      grid-template-columns: 1fr;
+    }
   }
 }
 

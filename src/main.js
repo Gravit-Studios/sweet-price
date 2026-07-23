@@ -3856,7 +3856,17 @@ function render() {
   // O primeiro filho é sempre o wrapper principal da página (.shell/.landing/
   // .auth-page/...); os demais irmãos (modal, cookie bar, banner de upgrade)
   // não devem deslizar junto — ver padrão em shellHtml/landingV2Html/authHtml.
-  if (isNewPage) app.firstElementChild?.classList.add('page-enter');
+  // Remove a classe ao fim da animação (fill-mode "both" a mantém em efeito
+  // indefinidamente enquanto ela seguir na árvore): um elemento com animação
+  // em transform/opacity ainda "em efeito" vira um novo contexto de
+  // empilhamento, e isso prendia o z-index de coisas nele dentro (ex.: o
+  // drawer mobile) só contra os outros filhos do wrapper, perdendo pra
+  // irmãos fora dele (como a barra de cookies) que deveriam ficar por baixo.
+  if (isNewPage) {
+    const pageEl = app.firstElementChild;
+    pageEl?.classList.add('page-enter');
+    pageEl?.addEventListener('animationend', () => pageEl.classList.remove('page-enter'), { once: true });
+  }
   setupScrollReveal();
   hydrateInlineSvgs();
   updateLandingNavScrolled();

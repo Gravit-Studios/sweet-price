@@ -19,6 +19,7 @@
 
   @include respond-down($bp-tablet) {
     padding: 20px 16px;
+    flex-direction: column;
     justify-content: center;
     text-align: center;
   }
