@@ -2856,8 +2856,10 @@ function limitUpgradeBanner(resourceLabel) {
     </div>`;
 }
 
-// Ícones de rede social sem link ainda (ver conversa) — viram <a> reais
-// assim que houver contas de verdade pra apontar.
+// Instagram já tem conta de verdade (ver conversa) — Facebook continua sem
+// link até existir uma conta pra apontar.
+const SWEETHUB_INSTAGRAM_URL = 'https://www.instagram.com/sweethubapp/?utm_source=ig_web_button_share_sheet';
+
 function siteFooter() {
   const year = new Date().getFullYear();
   return `
@@ -2869,7 +2871,7 @@ function siteFooter() {
           <button type="button" data-action="goto" data-route="privacidade">Privacidade</button>
         </nav>
         <div class="site-footer-social">
-          <span class="site-footer-social-icon" aria-label="Instagram">${icon('instagram')}</span>
+          <a class="site-footer-social-icon" href="${SWEETHUB_INSTAGRAM_URL}" target="_blank" rel="noopener noreferrer" aria-label="Instagram">${icon('instagram')}</a>
           <span class="site-footer-social-icon" aria-label="Facebook">${icon('facebook')}</span>
         </div>
         <span class="site-footer-badge">Powered by: <strong>Gravit</strong></span>
@@ -3353,9 +3355,9 @@ function landingV2Hero() {
           </div>
           ${fauxWindow(`
             <div class="faux-meta faux-meta-highlight"><span>Custo por unidade</span><strong>R$ 2,10</strong></div>
-            <div class="faux-tier"><span>Mínimo</span><strong>R$ 4,90</strong></div>
-            <div class="faux-tier is-active"><span>Média</span><strong>R$ 6,90</strong></div>
-            <div class="faux-tier"><span>Máximo</span><strong>R$ 8,90</strong></div>
+            <div class="faux-tier" data-tier="minimo"><span>Mínimo</span><strong>R$ 4,90</strong></div>
+            <div class="faux-tier is-active" data-tier="media"><span>Média</span><strong>R$ 6,90</strong></div>
+            <div class="faux-tier" data-tier="maximo"><span>Máximo</span><strong>R$ 8,90</strong></div>
           `)}
           <div class="landing-hero-floater landing-hero-floater-2">
             ${icon('trending')}<div><strong>+28%</strong><small>de margem média</small></div>
@@ -3370,6 +3372,46 @@ function landingV2Hero() {
       </div>
     </section>`;
 }
+
+// Faz o mockup do hero da LP2 "viver" sozinho, alternando qual nível de
+// margem está em destaque (mesmo custo/preços — só muda o que tá
+// selecionado) e trocando o texto dos dois cartõezinhos menores (métrica de
+// margem + selo) junto, pra contar a mesma história do nível escolhido.
+const LANDING_V2_HERO_DEMO_STATES = [
+  { tier: 'minimo', metric: { value: '+18%', label: 'de margem mínima' }, badge: { title: 'Preço competitivo', text: 'sem perder margem' } },
+  { tier: 'media', metric: { value: '+28%', label: 'de margem média' }, badge: { title: 'Margem garantida', text: 'em cada receita' } },
+  { tier: 'maximo', metric: { value: '+45%', label: 'de margem máxima' }, badge: { title: 'Alta lucratividade', text: 'no seu melhor preço' } },
+];
+
+let landingV2HeroDemoIndex = 0;
+
+// Troca o texto com um fade rápido em vez de um corte seco — só dispara se
+// o texto realmente mudou, pra não piscar a cada tick à toa.
+function fadeSwapText(el, text) {
+  if (!el || el.textContent === text) return;
+  el.style.transition = 'opacity 0.25s ease';
+  el.style.opacity = '0';
+  setTimeout(() => {
+    el.textContent = text;
+    el.style.opacity = '1';
+  }, 250);
+}
+
+function tickLandingV2HeroDemo() {
+  const stage = app.querySelector('.landing-v2-hero-stage');
+  if (!stage) return;
+  const demo = LANDING_V2_HERO_DEMO_STATES[landingV2HeroDemoIndex % LANDING_V2_HERO_DEMO_STATES.length];
+  landingV2HeroDemoIndex += 1;
+  stage.querySelectorAll('.faux-tier').forEach((row) => {
+    row.classList.toggle('is-active', row.dataset.tier === demo.tier);
+  });
+  fadeSwapText(stage.querySelector('.landing-hero-floater-2 strong'), demo.metric.value);
+  fadeSwapText(stage.querySelector('.landing-hero-floater-2 small'), demo.metric.label);
+  fadeSwapText(stage.querySelector('.landing-hero-floater-3 strong'), demo.badge.title);
+  fadeSwapText(stage.querySelector('.landing-hero-floater-3 small'), demo.badge.text);
+}
+
+setInterval(tickLandingV2HeroDemo, 3200);
 
 function landingV2Benefits() {
   return `
@@ -3458,7 +3500,7 @@ function landingV2Footer() {
           <button type="button" data-action="goto" data-route="privacidade">Política de privacidade</button>
         </nav>
         <div class="landing-v2-footer-social">
-          <span aria-label="Instagram">${icon('instagram')}</span>
+          <a href="${SWEETHUB_INSTAGRAM_URL}" target="_blank" rel="noopener noreferrer" aria-label="Instagram">${icon('instagram')}</a>
           <span aria-label="Facebook">${icon('facebook')}</span>
         </div>
         <span>Powered by: <strong>Gravit</strong></span>

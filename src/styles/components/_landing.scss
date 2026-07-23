@@ -466,9 +466,13 @@
   border-radius: $radius-sm;
   font-size: 0.82rem;
   color: $ink-700;
+  // Suaviza a troca de nível ativo no mockup do hero da LP2 (ver
+  // tickLandingV2HeroDemo em main.js), que alterna essa classe sozinho.
+  transition: background-color 0.4s ease, color 0.4s ease;
 
   strong {
     color: $ink-900;
+    transition: color 0.4s ease;
   }
 
   &.is-active {
@@ -1607,16 +1611,31 @@
 }
 
 .landing-v2-hero-chips {
-  position: relative;
+  // absolute (não mais um item normal do flex column do .landing-v2-hero):
+  // com justify-content: center lá, o bloco copy+chips ficava centralizado
+  // na altura toda da seção, e qualquer ajuste de margem só redistribuía
+  // esse espaço meio a meio (acima E abaixo) em vez de aproximar os chips
+  // do rodapé de verdade. Fixar a distância do bottom aqui é a única forma
+  // de garantir isso em qualquer altura de tela.
+  // left/right: 0 + margin: auto reproduz a MESMA centralização do
+  // .landing-section-inner (width 70/80/90% + max-width 1200) que essa
+  // classe já usa — sem isso (com left/right realmente "auto") o navegador
+  // zera as margens automáticas nesse cálculo e o bloco cai colado na
+  // borda esquerda da tela inteira, em vez de alinhado com o resto da seção.
+  position: absolute;
   z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 32px;
+  margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
   gap: 12px;
-  margin-top: clamp(40px, 9vh, 96px);
 
   @include stack-below($bp-tablet-lg) {
     justify-content: center;
+    bottom: 20px;
   }
 }
 
@@ -1625,7 +1644,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border: 1px solid rgba(var(--white-rgb), 0.55);
+  background: rgba(var(--white-rgb), 0.16);
   border-radius: $radius-pill;
   color: $white;
   font-size: $fs-sm;
